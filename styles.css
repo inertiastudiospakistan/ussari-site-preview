@@ -68,7 +68,7 @@ em { font-style: normal; }
   padding: 0 24px;
 }
 
-.section { padding: 96px 0; border-top: 1px solid var(--line); }
+.section { padding: 56px 0 64px; border-top: 1px solid var(--line); }
 .section-label { color: var(--slate); margin: 0 0 0.5rem; }
 .section-intro { font-size: 1.1rem; max-width: 640px; color: var(--alabaster); }
 
@@ -251,7 +251,7 @@ a:focus-visible, .btn:focus-visible, summary:focus-visible {
 
 .hero {
   position: relative;
-  padding: 96px 0 72px;
+  padding: 64px 0 56px;
   overflow: hidden;
 }
 
