@@ -170,8 +170,24 @@ em { font-style: normal; }
   color: var(--white);
   padding: 10px 12px;
   border: 1px solid transparent;
+  position: relative;
   transition: border-color 0.2s;
 }
+
+.main-nav a:not(.nav-cta)::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 5px;
+  height: 1px;
+  background: var(--crimson);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s ease;
+}
+.main-nav a:not(.nav-cta):hover::after,
+.main-nav a:not(.nav-cta):focus-visible::after { transform: scaleX(1); }
 
 .main-nav a:hover,
 .main-nav a:focus-visible { border-color: var(--white); }
@@ -205,23 +221,31 @@ a:focus-visible, .btn:focus-visible, summary:focus-visible {
   border-radius: 0;
   border: 1px solid var(--crimson);
   cursor: pointer;
-  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+  /* Sliding fill: a solid-colour sweep (background-size), not a gradient wash */
+  background-repeat: no-repeat;
+  transition: background-size 0.3s ease, background-color 0.2s, border-color 0.2s, box-shadow 0.2s, color 0.2s;
 }
 
 .btn-primary {
-  background: var(--crimson);
+  background-color: var(--crimson);
+  background-image: linear-gradient(var(--oxide), var(--oxide));
+  background-size: 0% 100%;
   color: var(--white);
   box-shadow: 0 0 24px rgba(220, 38, 38, 0.35); /* flagged glow deviation */
 }
-.btn-primary:hover, .btn-primary:focus-visible { background: var(--oxide); border-color: var(--oxide); }
+.btn-primary:hover, .btn-primary:focus-visible { background-size: 100% 100%; border-color: var(--oxide); }
 .btn-primary:disabled { opacity: 0.55; cursor: default; box-shadow: none; }
 
 .btn-ghost {
-  background: transparent;
+  background-color: transparent;
+  background-image: linear-gradient(var(--white), var(--white));
+  background-size: 0% 100%;
   color: var(--white);
   border: 1px solid var(--white);
 }
-.btn-ghost:hover, .btn-ghost:focus-visible { background: var(--white); color: var(--charcoal); }
+.btn-ghost:hover, .btn-ghost:focus-visible { background-size: 100% 100%; color: var(--charcoal); }
 
 /* ---------- Hero ---------- */
 
@@ -239,7 +263,7 @@ a:focus-visible, .btn:focus-visible, summary:focus-visible {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72'%3E%3Cpath d='M72 .5H.5V72' fill='none' stroke='%23A39E9E' stroke-opacity='.13'/%3E%3C/svg%3E");
   background-size: 72px 72px;
   opacity: 0;
-  animation: grid-in 1.4s ease-out 0.1s forwards;
+  animation: grid-in 1.4s ease-out 0.1s forwards, pan 28s linear 1.6s infinite;
   pointer-events: none;
 }
 
@@ -381,10 +405,39 @@ a:focus-visible, .btn:focus-visible, summary:focus-visible {
   color: var(--white);
 }
 
-/* ---------- Scroll reveals (work cards + automation only) ---------- */
+/* ---------- Ticker — constant motion under the hero ---------- */
 
-.reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.7s ease, transform 0.7s ease, border-color 0.2s; }
-.reveal.in { opacity: 1; transform: translateY(0); }
+.ticker {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  overflow: hidden;
+}
+.ticker-track {
+  display: flex;
+  width: max-content;
+  animation: tick 32s linear infinite;
+}
+.ticker:hover .ticker-track { animation-play-state: paused; }
+.tick-group { display: flex; flex-shrink: 0; }
+.tick-group span {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--white);
+  padding: 12px 0;
+  white-space: nowrap;
+}
+.tick-group .tick-sep { color: var(--crimson); padding: 12px 18px; }
+
+/* ---------- Scroll reveals (every section; stagger via --rd) ----------
+   Animation-based so it never fights the elements' own hover
+   transitions: on animationend the JS removes .reveal/.in, leaving
+   the element on its normal hover behaviour. */
+.reveal { opacity: 0; }
+.reveal.in { animation: reveal-in 0.7s ease var(--rd, 0ms) forwards; }
+@keyframes reveal-in { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ---------- Pillars ---------- */
 
@@ -395,8 +448,9 @@ a:focus-visible, .btn:focus-visible, summary:focus-visible {
   grid-template-columns: repeat(3, 1fr);
 }
 
-.pillar { padding: 48px 32px 56px; border-left: 1px solid var(--line); }
+.pillar { padding: 48px 32px 56px; border-left: 1px solid var(--line); transition: background 0.25s ease; }
 .pillar:first-child { border-left: none; }
+.pillar:hover { background: var(--panel); }
 .pillar h2 { font-size: 1.6rem; margin-bottom: 0.75rem; }
 .pillar p { margin: 0; color: var(--alabaster); }
 .pillar p:first-child { color: var(--crimson); margin-bottom: 0.75rem; }
@@ -432,9 +486,9 @@ a:focus-visible, .btn:focus-visible, summary:focus-visible {
   border: 1px solid var(--line);
 }
 
-.why-grid article { padding: 28px 24px; border-left: 1px solid var(--line); transition: border-color 0.2s; }
+.why-grid article { padding: 28px 24px; border-left: 1px solid var(--line); transition: border-color 0.2s, transform 0.25s ease; }
 .why-grid article:first-child { border-left: none; }
-.why-grid article:hover { border-color: var(--crimson); }
+.why-grid article:hover { border-color: var(--crimson); transform: translateY(-2px); }
 .why-grid h3 { margin-bottom: 0.5rem; }
 .why-grid p { margin: 0; font-size: 0.95rem; color: var(--alabaster); }
 
@@ -447,8 +501,8 @@ a:focus-visible, .btn:focus-visible, summary:focus-visible {
   margin-top: 2rem;
 }
 
-.service { padding: 36px 32px; border: 1px solid var(--line); transition: border-color 0.2s; }
-.service:hover { border-color: var(--crimson); }
+.service { padding: 36px 32px; border: 1px solid var(--line); transition: border-color 0.2s, transform 0.25s ease; }
+.service:hover { border-color: var(--crimson); transform: translateY(-2px); }
 .service-no { color: var(--crimson); margin: 0 0 0.75rem; }
 .service h3 { margin-bottom: 0.5rem; font-size: 1.3rem; }
 .service p { margin: 0; color: var(--alabaster); }
@@ -472,9 +526,9 @@ a:focus-visible, .btn:focus-visible, summary:focus-visible {
   font-size: 1.1rem;
   padding: 28px 24px;
   border: 1px solid var(--line);
-  transition: border-color 0.2s, color 0.2s;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
 }
-.sector-grid li:hover { border-color: var(--crimson); color: var(--crimson); }
+.sector-grid li:hover { background: var(--crimson); border-color: var(--crimson); color: var(--white); }
 
 /* ---------- Work (the ONE light slab) ---------- */
 
@@ -485,6 +539,7 @@ a:focus-visible, .btn:focus-visible, summary:focus-visible {
 .work-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 1fr; /* every row the height of the tallest — all 6 cards exactly equal */
   gap: 0;
   border: 1px solid var(--charcoal);
   margin-top: 2rem;
@@ -494,16 +549,41 @@ a:focus-visible, .btn:focus-visible, summary:focus-visible {
   background: var(--white);
   padding: 28px 24px;
   border-left: 1px solid var(--charcoal);
-  transition: border-color 0.2s;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.2s, transform 0.25s ease;
 }
 .work-card:nth-child(3n+1) { border-left: none; }
 .work-card:nth-child(n+4) { border-top: 1px solid var(--charcoal); }
-.work-card:hover { border-color: var(--crimson); }
+.reveal.in.work-card:hover, .work-card:hover { transform: translateY(-4px); border-color: var(--crimson); }
+/* Corner tick that draws in on hover */
+.work-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  border-top: 2px solid var(--crimson);
+  border-right: 2px solid var(--crimson);
+  transform: scale(0);
+  transform-origin: top right;
+  transition: transform 0.25s ease;
+  pointer-events: none;
+}
+.reveal.in.work-card:hover::after, .work-card:hover::after { transform: scale(1); }
 .work-card h3 { font-size: 1.25rem; margin-bottom: 0.5rem; }
 .work-card p { font-size: 0.95rem; }
-.work-card .proof-list { margin: 1rem 0 0; }
-.work-card .proof-list li { font-size: 0.78rem; padding: 10px 12px; }
-.work-card .work-links { margin: 1rem 0 0; }
+.work-card .work-desc { margin-bottom: 1rem; }
+/* Proof block: pinned to the bottom (margin-top:auto) and always exactly
+   two stacked rows, so every card's proof row sits on the same baseline. */
+.work-card .proof-list { margin: auto 0 0; display: flex; flex-direction: column; }
+.work-card .proof-list li { font-size: 0.78rem; padding: 10px 12px; border-left: none; border-top: 1px solid var(--charcoal); }
+.work-card .proof-list li:first-child { border-top: none; }
+/* Links row: fixed one-line slot (empty on link-less cards) so the
+   proof block and the Full detail line land on the same baselines. */
+.work-card .work-links { margin: 1rem 0 0; min-height: 1.6em; }
 .work-card .product-more { margin-top: 1rem; }
 .work-card .product-more summary {
   cursor: pointer;
@@ -514,6 +594,15 @@ a:focus-visible, .btn:focus-visible, summary:focus-visible {
 .work-card .product-more summary:hover { text-decoration: underline; }
 
 .work-tag { color: var(--crimson); margin: 0 0 0.5rem; }
+
+/* ---------- 6th cell: the "your project here" CTA card ---------- */
+
+.work-cta { background: var(--charcoal); color: var(--white); }
+.work-cta .work-tag { color: var(--crimson); }
+.work-cta h3 { color: var(--white); }
+.work-cta .work-desc { color: var(--alabaster); }
+.work-cta-line { margin: auto 0 0; padding-top: 1rem; }
+.work-cta-line .btn { width: 100%; text-align: center; }
 
 .proof-list {
   list-style: none;
@@ -562,13 +651,14 @@ a:focus-visible, .btn:focus-visible, summary:focus-visible {
   padding: 18px 20px;
   text-decoration: none;
   font-size: 0.95rem;
-  transition: border-color 0.2s, background 0.2s;
+  transition: border-color 0.2s, background 0.2s, transform 0.25s ease;
 }
 .automation-links a + a { border-top: none; }
 .automation-links a:hover, .automation-links a:focus-visible {
   border-color: var(--crimson);
   background: rgba(220, 38, 38, 0.07);
   color: var(--white);
+  transform: translateX(6px);
 }
 .automation-offer { border: 1px solid var(--line-strong); margin-top: 2rem; }
 .automation-offer li { border-left: 1px solid var(--line); color: var(--alabaster); }
@@ -620,8 +710,16 @@ a:focus-visible, .btn:focus-visible, summary:focus-visible {
 .call-hint { color: var(--slate); margin: 0.75rem 0 0; min-height: 1.2em; }
 .call-controls { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 1rem; }
 .call-controls .btn { padding: 10px 20px; font-size: 0.9rem; }
-.call-btn-dark { background: transparent; color: var(--white); border: 1px solid var(--white); }
-.call-btn-dark:hover, .call-btn-dark:focus-visible { background: var(--white); color: var(--charcoal); }
+.call-btn-dark {
+  background-color: transparent;
+  background-image: linear-gradient(var(--white), var(--white));
+  background-size: 0% 100%;
+  background-repeat: no-repeat;
+  color: var(--white);
+  border: 1px solid var(--white);
+  transition: background-size 0.3s ease, color 0.2s;
+}
+.call-btn-dark:hover, .call-btn-dark:focus-visible { background-size: 100% 100%; color: var(--charcoal); }
 .call-type { margin-top: 1.25rem; }
 .call-type label { display: block; color: var(--alabaster); margin-bottom: 0.5rem; }
 .call-type-row { display: flex; gap: 12px; }
@@ -668,9 +766,9 @@ a:focus-visible, .btn:focus-visible, summary:focus-visible {
   margin-top: 2rem;
 }
 
-.founder-card { padding: 36px 32px; transition: border-color 0.2s; }
+.founder-card { padding: 36px 32px; transition: border-color 0.2s, transform 0.25s ease; }
 .founder-card + .founder-card { border-left: 1px solid var(--line); }
-.founder-card:hover { border-color: var(--crimson); }
+.founder-card:hover { border-color: var(--crimson); transform: translateY(-2px); }
 .founder-role { color: var(--crimson); margin: 0 0 0.75rem; }
 .founder-card h3 { font-size: 1.6rem; margin-bottom: 0.5rem; }
 .founder-focus { color: var(--alabaster); margin: 0 0 1rem; }
@@ -708,6 +806,8 @@ a:focus-visible, .btn:focus-visible, summary:focus-visible {
 @keyframes rise { to { transform: translateY(0); } }
 @keyframes fade-in { to { opacity: 1; } }
 @keyframes grid-in { to { opacity: 1; } }
+@keyframes pan { from { background-position: 0 0; } to { background-position: 72px 72px; } }
+@keyframes tick { to { transform: translateX(-50%); } }
 @keyframes scan {
   0% { top: 0; opacity: 0; }
   4% { opacity: 0.35; }
@@ -747,7 +847,7 @@ a:focus-visible, .btn:focus-visible, summary:focus-visible {
   .founder-grid { grid-template-columns: 1fr; }
   .founder-card + .founder-card { border-left: none; border-top: 1px solid var(--line); }
   .section { padding: 64px 0; }
-  .work-grid { grid-template-columns: repeat(2, 1fr); }
+  .work-grid { grid-template-columns: repeat(2, 1fr); grid-auto-rows: auto; }
   .work-card:nth-child(3n+1) { border-left: 1px solid var(--charcoal); }
   .work-card:nth-child(odd) { border-left: none; }
   .work-card:nth-child(n+3) { border-top: 1px solid var(--charcoal); }
