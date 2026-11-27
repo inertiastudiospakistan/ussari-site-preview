@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inbox / CRM Triage Demo — Ussari Labs</title>
+<meta name="description" content="Working demo: paste an incoming message, get a rule-based triage — category, urgency with reasons, a drafted reply — and file it on a CRM board. Demo only; a live deployment would use an LLM via the client's account.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="../../mark.svg">
+<style>
+/* USSARI LABS — Structural Precision. No gradients, no shadows, no rounded corners. */
+:root{
+  --crimson:#DC2626; --alabaster:#F8F4F4; --slate:#A39E9E; --white:#FFFFFF;
+  --charcoal:#1A1515; --oxide:#4A0E17;
+  --font-head:"Space Grotesk","Plus Jakarta Sans",sans-serif;
+  --font-body:"Inter",Roboto,sans-serif;
+  --font-mono:"JetBrains Mono","Fira Code",monospace;
+  --border:1px solid var(--charcoal);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--white);color:var(--charcoal);font-family:var(--font-body);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--font-head);font-weight:700;text-transform:uppercase;letter-spacing:-.03em;line-height:1.1;margin:0}
+h1{font-size:clamp(1.9rem,5vw,3rem)}
+h2{font-size:1.35rem}
+h3{font-size:1.05rem;letter-spacing:0}
+p{margin:0 0 1rem}
+a{color:inherit}
+.mono{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase}
+.wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+.site-header{background:var(--white);border-bottom:var(--border)}
+.header-inner{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:64px;flex-wrap:wrap;padding-top:8px;padding-bottom:8px}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--charcoal)}
+.brand-word{font-family:var(--font-head);font-weight:700;text-transform:uppercase;letter-spacing:-.03em;font-size:1.2rem}
+.back-link{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;border:var(--border);padding:10px 14px}
+.back-link:hover{border-color:var(--crimson);color:var(--crimson)}
+.hero{background:var(--charcoal);color:var(--white);padding:56px 0 48px}
+.hero .eyebrow{color:var(--slate);margin:0 0 1rem}
+.hero p.lede{color:var(--alabaster);max-width:720px;font-size:1.1rem}
+.notice{border:2px solid var(--crimson);background:var(--alabaster);padding:20px 24px;margin:32px 0 0}
+.notice p{margin:0}
+.notice strong{color:var(--crimson)}
+.section{padding:48px 0;border-top:var(--border)}
+.section:first-of-type{border-top:none}
+label{display:block;font-family:var(--font-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;margin:0 0 8px}
+textarea{width:100%;min-height:140px;padding:14px 16px;border:var(--border);border-radius:0;font-family:var(--font-body);font-size:16px;line-height:1.6;background:var(--white);color:var(--charcoal);resize:vertical}
+textarea:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--crimson);outline-offset:2px}
+textarea.draft{min-height:150px;font-size:15px}
+.btn{display:inline-block;font-family:var(--font-head);font-weight:700;text-transform:uppercase;letter-spacing:-.03em;font-size:1rem;text-decoration:none;padding:14px 28px;border-radius:0;border:1px solid var(--crimson);cursor:pointer;background:var(--crimson);color:var(--white)}
+.btn:hover{background:var(--oxide);border-color:var(--oxide)}
+.btn-ghost{background:transparent;color:var(--charcoal);border-color:var(--charcoal)}
+.btn-ghost:hover{background:var(--charcoal);color:var(--white);border-color:var(--charcoal)}
+.btn-small{padding:8px 12px;font-size:.85rem}
+.actions{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0 0}
+.samples{margin-top:32px}
+.sample-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0;border:var(--border)}
+.sample-btn{text-align:left;background:var(--white);border:none;border-left:var(--border);padding:20px;cursor:pointer;font-family:var(--font-body);font-size:15px;line-height:1.5;color:var(--charcoal)}
+.sample-btn:nth-child(odd){border-left:none}
+.sample-btn:nth-child(n+3){border-top:var(--border)}
+.sample-btn:hover{background:var(--alabaster)}
+.sample-btn strong{display:block;font-family:var(--font-head);text-transform:uppercase;font-size:1rem;margin-bottom:4px}
+.sample-tag{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--crimson)}
+.result{border:var(--border);margin-top:24px;background:var(--white)}
+.result-head{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;padding:20px 24px;border-bottom:var(--border);background:var(--alabaster)}
+.result-body{padding:20px 24px}
+.badge{display:inline-block;font-family:var(--font-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;padding:6px 10px;border:var(--border);background:var(--white)}
+.badge-lead{background:var(--charcoal);color:var(--white);border-color:var(--charcoal)}
+.badge-complaint{background:var(--crimson);color:var(--white);border-color:var(--crimson)}
+.badge-supplier{background:var(--white);color:var(--charcoal)}
+.badge-spam{background:var(--oxide);color:var(--white);border-color:var(--oxide)}
+.badge-other{background:var(--alabaster);color:var(--charcoal)}
+.urgency{font-family:var(--font-head);font-weight:700;font-size:1.4rem}
+.urgency .out-of{font-size:.9rem;color:var(--slate)}
+.reasons{list-style:none;margin:12px 0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.reasons li{font-family:var(--font-mono);font-size:.78rem;padding:6px 10px;border:1px solid var(--slate)}
+.scores{font-family:var(--font-mono);font-size:.78rem;color:var(--slate);margin:0 0 12px}
+blockquote{margin:0 0 16px;padding-left:16px;border-left:4px solid var(--crimson);font-size:.95rem;color:var(--charcoal)}
+.board{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:var(--border);margin-top:24px}
+.column{border-left:var(--border);min-height:220px;background:var(--white)}
+.column:first-child{border-left:none}
+.column.drag-over{background:var(--alabaster)}
+.column-head{padding:16px;border-bottom:var(--border);display:flex;justify-content:space-between;align-items:baseline;gap:8px;background:var(--alabaster)}
+.column-head h3{font-size:.95rem}
+.count{font-family:var(--font-mono);font-size:.78rem;color:var(--crimson)}
+.column-body{padding:12px;display:flex;flex-direction:column;gap:12px;min-height:160px}
+.card{border:var(--border);padding:14px;background:var(--white);cursor:grab}
+.card:active{cursor:grabbing}
+.card.dragging{opacity:.5}
+.card p{margin:0 0 8px;font-size:.92rem}
+.card .card-meta{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--slate);margin:0 0 8px}
+.card .card-status{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;margin:0 0 10px}
+.card-actions{display:flex;gap:8px;flex-wrap:wrap}
+.card-actions button{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding:6px 8px;border:var(--border);background:var(--white);cursor:pointer;border-radius:0}
+.card-actions button:hover{background:var(--charcoal);color:var(--white)}
+.empty{color:var(--slate);font-size:.9rem;padding:8px 4px}
+.summary{margin-top:16px}
+.summary p{margin:0;font-family:var(--font-mono);font-size:.85rem}
+.how{margin:2rem 0 0;padding:0;list-style:none;border:var(--border)}
+.how li{padding:16px 20px;border-top:var(--border)}
+.how li:first-child{border-top:none}
+.how strong{font-family:var(--font-head);text-transform:uppercase}
+.site-footer{background:var(--charcoal);color:var(--white);padding:32px 0}
+.footer-inner{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:center}
+.footer-inner p{margin:0;color:var(--slate)}
+@media(max-width:900px){.board{grid-template-columns:repeat(2,1fr)}.column:nth-child(3){border-left:none}.column:nth-child(n+3){border-top:var(--border)}.sample-grid{grid-template-columns:1fr}.sample-btn{border-left:none;border-top:var(--border)}.sample-btn:first-child{border-top:none}}
+@media(max-width:560px){.board{grid-template-columns:1fr}.column{border-left:none;border-top:var(--border)}.column:first-child{border-top:none}.section{padding:32px 0}}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="../index.html" aria-label="Ussari Labs — home">
+      <svg class="mark" width="36" height="36" viewBox="0 0 96 96" role="img" aria-label="Ussari Labs mark"><rect x="0" y="0" width="30" height="96" fill="currentColor"/><rect x="30" y="66" width="36" height="30" fill="currentColor"/><rect x="66" y="0" width="30" height="96" fill="currentColor"/></svg>
+      <span class="brand-word">USSARI&nbsp;LABS</span>
+    </a>
+    <a class="back-link" href="../index.html">&larr; Back to Ussari Labs</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <p class="mono eyebrow">Ussari Labs&nbsp;&nbsp;/&nbsp;&nbsp;AI Automation&nbsp;&nbsp;/&nbsp;&nbsp;Demo 01</p>
+      <h1>Inbox / CRM Triage</h1>
+      <p class="lede">Paste an incoming message. The demo sorts it, scores its urgency, drafts a reply — and files it on a CRM board. Everything below runs in your browser. Nothing is sent anywhere.</p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="notice" role="note">
+      <p><strong>Demo — rule-based triage.</strong> This page classifies with keyword / signal scoring in JavaScript (see “How it works” below). A live deployment would use an LLM via the client&rsquo;s own account, and the client pays that usage. The four samples are invented examples, labelled SAMPLE — they are not real customers, and there are no real client results, testimonials, or contact details on this page. The board lives only in this browser tab and resets when the page is reloaded.</p>
+    </div>
+  </div>
+
+  <!-- INPUT -->
+  <section class="section">
+    <div class="wrap">
+      <p class="mono" style="color:var(--crimson)">01&nbsp;&nbsp;/&nbsp;&nbsp;Incoming message</p>
+      <h2>Paste a message to triage</h2>
+      <p style="margin-top:12px">Type or paste any message — a sales enquiry, a complaint, a supplier note, or anything else. Press <strong>Triage</strong> and watch the classification change with the words you use.</p>
+
+      <label for="message-input">Incoming message</label>
+      <textarea id="message-input" placeholder="Paste an incoming message here — for example: Hi, we need a quote for automating our customer replies. What would it cost and how soon could you start?"></textarea>
+      <div class="actions">
+        <button class="btn" id="triage-btn" type="button">Triage this message</button>
+        <button class="btn btn-ghost" id="triage-all-btn" type="button">Triage all samples</button>
+        <button class="btn btn-ghost" id="clear-btn" type="button">Clear board</button>
+      </div>
+
+      <div class="samples">
+        <label id="samples-label">Or load a sample — click one</label>
+        <div class="sample-grid" role="group" aria-labelledby="samples-label" id="sample-grid"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section class="section">
+    <div class="wrap">
+      <p class="mono" style="color:var(--crimson)">02&nbsp;&nbsp;/&nbsp;&nbsp;Triage result</p>
+      <h2>Classification &amp; drafted reply</h2>
+      <p style="margin-top:12px">The draft is a starting point, written from the classification and the message&rsquo;s own details. Edit it in the box before you would send it — the edited text is what stays on the card.</p>
+      <div id="results" aria-live="polite">
+        <p style="margin-top:24px;color:var(--slate)">No message triaged yet. Paste a message above, or load a sample.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- BOARD -->
+  <section class="section">
+    <div class="wrap">
+      <p class="mono" style="color:var(--crimson)">03&nbsp;&nbsp;/&nbsp;&nbsp;CRM board</p>
+      <h2>Filed on the board</h2>
+      <p style="margin-top:12px">Every triaged message lands in <strong>New</strong>. Drag a card to another column, or use its &larr; / &rarr; buttons. The card&rsquo;s status and the column counts update straight away.</p>
+      <div class="board" id="board">
+        <div class="column" data-status="new"><div class="column-head"><h3>New</h3><span class="count" data-count-for="new">0</span></div><div class="column-body" data-column="new"><p class="empty">Nothing here yet.</p></div></div>
+        <div class="column" data-status="contacted"><div class="column-head"><h3>Contacted</h3><span class="count" data-count-for="contacted">0</span></div><div class="column-body" data-column="contacted"><p class="empty">Nothing here yet.</p></div></div>
+        <div class="column" data-status="booked"><div class="column-head"><h3>Booked</h3><span class="count" data-count-for="booked">0</span></div><div class="column-body" data-column="booked"><p class="empty">Nothing here yet.</p></div></div>
+        <div class="column" data-status="done"><div class="column-head"><h3>Done</h3><span class="count" data-count-for="done">0</span></div><div class="column-body" data-column="done"><p class="empty">Nothing here yet.</p></div></div>
+      </div>
+      <div class="summary"><p id="summary-line">0 messages triaged.</p></div>
+
+      <ol class="how">
+        <li><strong>How it works —</strong> the classifier scores the message against four signal lists (lead, complaint, supplier, spam). The highest score wins; a strong spam signal always wins, because a prize / crypto / “click here” message should never be answered as a lead. Ties break in the order spam &gt; complaint &gt; lead &gt; supplier.</li>
+        <li><strong>Urgency 1–5 —</strong> starts at 1 and adds points for urgent words (+2), angry tone (+1), money mentioned (+1), a deadline or date (+1), and a blocked / not-working service (+1), capped at 5. Spam is always urgency 1 — it is deprioritised, not answered.</li>
+        <li><strong>Drafts —</strong> templates filled with details pulled from the message itself: amounts (Rs / $ / £), invoice or order references, dates, and the words that triggered the classification. No name is invented — the draft opens with “Hello,” unless the message itself contains one.</li>
+        <li><strong>Limits —</strong> this is keyword scoring, not understanding. Sarcasm, mixed messages (“great service” said angrily), and new wording it has no signals for will be misclassified. That is exactly what the audit-first step of a live deployment is for: the client&rsquo;s real inbox is sampled first, and the rules — or the LLM prompt — are tuned to it.</li>
+      </ol>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p class="mono">USSARI LABS&nbsp;&nbsp;—&nbsp;&nbsp;INBOX / CRM TRIAGE DEMO</p>
+    <p class="mono">Demo — rule-based, runs in your browser, nothing sent anywhere.</p>
+  </div>
+</footer>
+
+<script>
+/* ============================================================
+   Inbox / CRM Triage — rule-based classifier (client-side only)
+   Pure functions first (triageMessage, draftReply, extractDetails)
+   so the logic can be tested without a DOM. DOM wiring below
+   only runs when `document` exists.
+   ============================================================ */
+(function () {
+  'use strict';
+
+  var SIGNALS = {
+    lead: [
+      ['quote', 2], ['quotation', 2], ['pricing', 2], ['price', 2], ['how much', 2],
+      ['cost', 1], ['interested', 2], ['looking for', 2], ['need a', 1], ['we need', 1],
+      ['buy', 1], ['order', 1], ['hire', 2], ['demo', 2], ['proposal', 2],
+      ['package', 1], ['service', 1], ['can you help', 2], ['do you offer', 2],
+      ['would like', 1], ['get started', 2], ['start', 1], ['budget', 1],
+      ['enquir', 2], ['inquir', 2], ['website', 1], ['automate', 1], ['automation', 1]
+    ],
+    complaint: [
+      ['refund', 3], ['not working', 3], ['stopped working', 3], ['broken', 2],
+      ['unacceptable', 3], ['furious', 3], ['angry', 2], ['terrible', 2],
+      ['worst', 2], ['disappointed', 2], ['complaint', 3], ['complain', 2],
+      ['never again', 2], ['cancel', 1], ['charged', 2], ['wrong', 1],
+      ['delay', 1], ['late', 1], ['no reply', 2], ['nobody replied', 2],
+      ['nobody has replied', 2], ['no one replied', 2], ['issue', 1],
+      ['problem', 1], ['lost', 1], ['crashed', 2], ['down', 1], ['stuck', 2],
+      ['third time', 2], ['again', 1], ['money back', 3], ['take this further', 2],
+      ['awful', 2], ['useless', 2], ['waste', 1]
+    ],
+    supplier: [
+      ['invoice', 3], ['supplier', 3], ['delivery', 2], ['shipment', 2],
+      ['stock', 2], ['restock', 2], ['purchase order', 3], ['wholesale', 2],
+      ['vendor', 2], ['dispatch', 2], ['tracking', 1], ['payment due', 2],
+      ['due on', 1], ['confirm you received', 2], ['packaging', 1],
+      ['boxes', 1], ['order #', 1], ['deliver', 1]
+    ],
+    spam: [
+      ['congratulations', 3], ['you have won', 3], ['you won', 3], ['winner', 3],
+      ['lottery', 3], ['free crypto', 3], ['crypto', 1], ['bitcoin', 2],
+      ['click here', 3], ['claim your prize', 3], ['claim', 1], ['prize', 2],
+      ['guaranteed returns', 3], ['guaranteed', 2], ['double your', 3],
+      ['earn $', 2], ['make money fast', 3], ['free money', 3],
+      ['limited time offer', 2], ['act now', 2], ['before it expires', 2],
+      ['send bitcoin', 3], ['investment opportunity', 2], ['get rich', 3]
+    ]
+  };
+
+  var URGENT_WORDS = ['urgent', 'asap', 'immediately', 'emergency', 'critical', 'right now', 'today', 'need this now'];
+  var ANGRY_WORDS = ['furious', 'angry', 'unacceptable', 'terrible', 'worst', 'awful', 'disgusted', 'outraged', 'never again', 'ridiculous'];
+  var BLOCKED_WORDS = ['not working', 'stopped working', 'broken', 'crashed', 'down', 'stuck', 'cannot use', "can't use", 'lost a full day', 'lost sales'];
+  var DATE_WORDS = ['today', 'tomorrow', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'this week', 'next week', 'by friday', 'by monday', 'deadline', 'due on', 'due', 'this morning', 'yesterday'];
+  var MONEY_RE = /(Rs\.?\s?[\d,]+(?:\.\d+)?|PKR\s?[\d,]+(?:\.\d+)?|\$\s?[\d,]+(?:\.\d+)?|£\s?[\d,]+(?:\.\d+)?|€\s?[\d,]+(?:\.\d+)?|[\d,]+\s?(?:rupees|pkr|dollars|pounds))/i;
+  var REF_RE = /\b(?:INV|ORDER|PO|REF)[-\s]?#?\s?([A-Z0-9-]{2,})\b/i;
+  var HASH_REF_RE = /#\s?(\d{3,})/;
+
+  function countSignals(text, list) {
+    var matched = [], score = 0;
+    list.forEach(function (pair) {
+      if (text.indexOf(pair[0]) !== -1) { score += pair[1]; matched.push(pair[0]); }
+    });
+    return { score: score, matched: matched };
+  }
+
+  function extractDetails(text, original) {
+    var money = original.match(MONEY_RE);
+    var ref = original.match(REF_RE) || original.match(HASH_REF_RE);
+    var dateHit = null;
+    DATE_WORDS.forEach(function (d) { if (!dateHit && text.indexOf(d) !== -1) dateHit = d; });
+    var topic = null;
+    ['website', 'customer replies', 'stock alerts', 'automation', 'packaging', 'boxes', 'software', 'app', 'orders', 'delivery', 'invoice'].forEach(function (t) {
+      if (!topic && text.indexOf(t) !== -1) topic = t;
+    });
+    return {
+      money: money ? money[0].replace(/\s+/g, ' ').trim() : null,
+      ref: ref ? ref[0].replace(/\s+/g, ' ').trim() : null,
+      dateWord: dateHit,
+      topic: topic,
+      snippet: original.replace(/\s+/g, ' ').trim().slice(0, 140)
+    };
+  }
+
+  function triageMessage(rawText) {
+    var original = (rawText || '').trim();
+    var text = original.toLowerCase();
+    if (!original) return null;
+
+    var scores = {}, matched = {};
+    Object.keys(SIGNALS).forEach(function (cat) {
+      var r = countSignals(text, SIGNALS[cat]);
+      scores[cat] = r.score; matched[cat] = r.matched;
+    });
+
+    var category;
+    if (scores.spam >= 4) {
+      category = 'spam';
+    } else {
+      var order = ['complaint', 'lead', 'supplier', 'spam'];
+      category = 'other';
+      var best = 0;
+      order.forEach(function (cat) {
+        if (scores[cat] > best) { best = scores[cat]; category = cat; }
+      });
+      if (best === 0) category = 'other';
+    }
+
+    /* Urgency 1-5, with reasons shown. */
+    var urgency = 1, reasons = [];
+    if (category === 'spam') {
+      reasons.push('spam pattern — deprioritised, do not reply');
+    } else {
+      var urgentHit = URGENT_WORDS.filter(function (w) { return text.indexOf(w) !== -1; });
+      if (urgentHit.length) { urgency += 2; reasons.push('urgent words: ' + urgentHit.slice(0, 3).join(', ')); }
+      var angryHit = ANGRY_WORDS.filter(function (w) { return text.indexOf(w) !== -1; });
+      if (angryHit.length) { urgency += 1; reasons.push('angry tone words: ' + angryHit.slice(0, 3).join(', ')); }
+      var money = original.match(MONEY_RE);
+      if (money) { urgency += 1; reasons.push('money mentioned: ' + money[0].replace(/\s+/g, ' ').trim()); }
+      var dateHit = DATE_WORDS.filter(function (w) { return text.indexOf(w) !== -1; });
+      if (dateHit.length) { urgency += 1; reasons.push('deadline / date mentioned: ' + dateHit.slice(0, 2).join(', ')); }
+      var blockedHit = BLOCKED_WORDS.filter(function (w) { return text.indexOf(w) !== -1; });
+      if (blockedHit.length) { urgency += 1; reasons.push('service blocked / not working: ' + blockedHit.slice(0, 2).join(', ')); }
+      if (reasons.length === 0) reasons.push('no urgency signals — routine message');
+    }
+    if (urgency > 5) urgency = 5;
+    if (urgency < 1) urgency = 1;
+
+    var details = extractDetails(text, original);
+    return {
+      category: category, urgency: urgency, reasons: reasons,
+      scores: scores, matched: matched, details: details,
+      draft: draftReply(category, details, original)
+    };
+  }
+
+  function draftReply(category, details, original) {
+    var moneyBit = details.money ? ' (' + details.money + ')' : '';
+    var refBit = details.ref ? ' (' + details.ref + ')' : '';
+    var topicBit = details.topic ? ' — ' + details.topic : '';
+    var quote = '“' + details.snippet + (original.length > 140 ? '…' : '') + '”';
+    if (category === 'lead') {
+      return 'Hello,\n\nThank you for getting in touch' + topicBit + ' — we would be glad to help. ' +
+        (details.money ? 'You mentioned a budget of ' + details.money + '; ' : '') +
+        'Could you tell us (1) what the work needs to cover, and (2) when you would like it live? ' +
+        'On that basis we will send you a written quote' + moneyBit + ' and a start date.\n\nBest regards,\nUssari Labs';
+    }
+    if (category === 'complaint') {
+      return 'Hello,\n\nI am sorry — that should not have happened' + topicBit + '. ' +
+        'We have logged your message about ' + quote + ' and are looking into it now' +
+        (details.ref ? ' (reference ' + details.ref + ')' : '') + '. ' +
+        (details.money ? 'We can see the amount involved is ' + details.money + '. ' : '') +
+        'We will come back to you with what went wrong and what we are doing to fix it — if you can share an order or invoice reference, that will speed it up.\n\nBest regards,\nUssari Labs';
+    }
+    if (category === 'supplier') {
+      return 'Hello,\n\nThank you — we have received your message' + refBit + moneyBit + '. ' +
+        (details.dateWord ? 'Noted for ' + details.dateWord + '. ' : '') +
+        'We confirm receipt and will check this against our records today, then confirm back to you.\n\nBest regards,\nUssari Labs';
+    }
+    if (category === 'spam') {
+      return 'NO REPLY — file as spam.\n\nDo not click any link in this message and do not reply to the sender. ' +
+        'Matched spam signals in the message: ' + quote;
+    }
+    return 'Hello,\n\nThank you for your message. Could you tell us a little more about what you need — ' +
+      'for example, is this a sales enquiry, a support issue, or something else? ' +
+      'Once we know, we will point you to the right person.\n\nBest regards,\nUssari Labs';
+  }
+
+  var SAMPLES = [
+    {
+      id: 'lead', label: 'Sales lead', title: 'SAMPLE — Sales lead',
+      text: 'Hello, I run a small retail shop in Lahore and I am interested in your AI automation service. Could you send me a quote for automating our customer replies and stock alerts? Our budget is around Rs 150,000. Please reply this week.'
+    },
+    {
+      id: 'complaint', label: 'Complaint', title: 'SAMPLE — Complaint',
+      text: 'This is unacceptable. Your software stopped working yesterday, my orders are stuck, and nobody has replied for three days. I paid Rs 45,000 and I want a refund immediately or I will take this further.'
+    },
+    {
+      id: 'supplier', label: 'Supplier message', title: 'SAMPLE — Supplier message',
+      text: 'Hi, this is your packaging supplier. Invoice INV-2041 for Rs 82,500 is due on Friday. The next delivery of boxes is scheduled for Monday, please confirm you received this.'
+    },
+    {
+      id: 'spam', label: 'Spam', title: 'SAMPLE — Spam',
+      text: 'CONGRATULATIONS! You have won $5,000 in FREE crypto! Click here now to claim your prize before it expires — guaranteed returns, double your Bitcoin today!'
+    }
+  ];
+
+  /* Expose pure logic for testing (Node / console), no DOM needed. */
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { triageMessage: triageMessage, draftReply: draftReply, SAMPLES: SAMPLES };
+  }
+  if (typeof window !== 'undefined') {
+    window.__triage = { triageMessage: triageMessage, draftReply: draftReply, SAMPLES: SAMPLES };
+  }
+
+  /* ---------------- DOM wiring (browser only) ---------------- */
+  if (typeof document === 'undefined') return;
+
+  var STATUSES = ['new', 'contacted', 'booked', 'done'];
+  var STATUS_LABELS = { new: 'New', contacted: 'Contacted', booked: 'Booked', done: 'Done' };
+  var cards = [];
+  var nextId = 1;
+
+  var input = document.getElementById('message-input');
+  var resultsEl = document.getElementById('results');
+  var summaryEl = document.getElementById('summary-line');
+  var sampleGrid = document.getElementById('sample-grid');
+
+  SAMPLES.forEach(function (s) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'sample-btn';
+    b.setAttribute('data-sample', s.id);
+    b.innerHTML = '<span class="sample-tag">Sample — ' + s.label + '</span><strong>' + s.title + '</strong><span>' + s.text + '</span>';
+    b.addEventListener('click', function () { input.value = s.text; input.focus(); });
+    sampleGrid.appendChild(b);
+  });
+
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function updateSummary() {
+    var counts = { lead: 0, complaint: 0, supplier: 0, spam: 0, other: 0 };
+    cards.forEach(function (c) { counts[c.category] = (counts[c.category] || 0) + 1; });
+    summaryEl.textContent = cards.length + ' message' + (cards.length === 1 ? '' : 's') + ' triaged: ' +
+      counts.lead + ' lead, ' + counts.complaint + ' complaint, ' + counts.supplier + ' supplier, ' +
+      counts.spam + ' spam, ' + counts.other + ' other.';
+    STATUSES.forEach(function (st) {
+      var n = cards.filter(function (c) { return c.status === st; }).length;
+      var el = document.querySelector('[data-count-for="' + st + '"]');
+      if (el) el.textContent = String(n);
+    });
+  }
+
+  function renderBoard() {
+    STATUSES.forEach(function (st) {
+      var body = document.querySelector('[data-column="' + st + '"]');
+      if (!body) return;
+      body.innerHTML = '';
+      var inCol = cards.filter(function (c) { return c.status === st; });
+      if (!inCol.length) {
+        var p = document.createElement('p');
+        p.className = 'empty';
+        p.textContent = 'Nothing here yet.';
+        body.appendChild(p);
+        return;
+      }
+      inCol.forEach(function (card) {
+        var el = document.createElement('article');
+        el.className = 'card';
+        el.draggable = true;
+        el.setAttribute('data-card-id', String(card.id));
+        el.innerHTML =
+          '<p class="card-meta">' + esc(card.category.toUpperCase()) + ' &nbsp;·&nbsp; Urgency ' + card.urgency + '/5</p>' +
+          '<p>' + esc(card.details.snippet) + '</p>' +
+          '<p class="card-status">Status: ' + esc(STATUS_LABELS[card.status]) + '</p>' +
+          '<div class="card-actions">' +
+          '<button type="button" data-move="-1" aria-label="Move card back">&larr; Back</button>' +
+          '<button type="button" data-move="1" aria-label="Move card forward">Forward &rarr;</button>' +
+          '<button type="button" data-view-draft>View draft</button>' +
+          '</div>';
+        el.addEventListener('dragstart', function (e) {
+          e.dataTransfer.setData('text/plain', String(card.id));
+          e.dataTransfer.effectAllowed = 'move';
+          el.classList.add('dragging');
+        });
+        el.addEventListener('dragend', function () { el.classList.remove('dragging'); });
+        el.querySelectorAll('[data-move]').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            moveCard(card.id, parseInt(btn.getAttribute('data-move'), 10));
+          });
+        });
+        el.querySelector('[data-view-draft]').addEventListener('click', function () {
+          var r = document.getElementById('result-' + card.id);
+          if (r) { r.scrollIntoView({ behavior: 'smooth', block: 'start' }); r.querySelector('textarea').focus(); }
+        });
+        body.appendChild(el);
+      });
+    });
+    updateSummary();
+  }
+
+  function moveCard(id, delta) {
+    var card = cards.find(function (c) { return c.id === id; });
+    if (!card) return;
+    var idx = STATUSES.indexOf(card.status);
+    var next = idx + delta;
+    if (next < 0 || next >= STATUSES.length) return;
+    card.status = STATUSES[next];
+    renderBoard();
+  }
+
+  /* Drag-and-drop targets. */
+  document.querySelectorAll('.column').forEach(function (col) {
+    var body = col.querySelector('.column-body');
+    col.addEventListener('dragover', function (e) { e.preventDefault(); col.classList.add('drag-over'); });
+    col.addEventListener('dragleave', function () { col.classList.remove('drag-over'); });
+    col.addEventListener('drop', function (e) {
+      e.preventDefault();
+      col.classList.remove('drag-over');
+      var id = parseInt(e.dataTransfer.getData('text/plain'), 10);
+      var card = cards.find(function (c) { return c.id === id; });
+      if (card) { card.status = col.getAttribute('data-status'); renderBoard(); }
+    });
+    if (body) body.addEventListener('dragover', function (e) { e.preventDefault(); });
+  });
+
+  function triageCurrent() {
+    var text = input.value;
+    if (!text.trim()) {
+      resultsEl.innerHTML = '<p style="margin-top:24px;color:var(--crimson)">Paste a message first — the box is empty.</p>';
+      return null;
+    }
+    var result = triageMessage(text);
+    var card = {
+      id: nextId++, category: result.category, urgency: result.urgency,
+      reasons: result.reasons, scores: result.scores, matched: result.matched,
+      details: result.details, draft: result.draft, status: 'new', text: text.trim()
+    };
+    cards.unshift(card);
+
+    if (resultsEl.querySelector('p') && !resultsEl.querySelector('.result')) resultsEl.innerHTML = '';
+    var div = document.createElement('article');
+    div.className = 'result';
+    div.id = 'result-' + card.id;
+    var scoreLine = 'Scores — lead ' + result.scores.lead + ' · complaint ' + result.scores.complaint +
+      ' · supplier ' + result.scores.supplier + ' · spam ' + result.scores.spam +
+      (result.matched[result.category].length ? ' · matched: ' + esc(result.matched[result.category].join(', ')) : '');
+    div.innerHTML =
+      '<div class="result-head"><h3>#' + card.id + ' &nbsp;<span class="badge badge-' + esc(result.category) + '">' + esc(result.category) + '</span></h3>' +
+      '<span class="urgency">Urgency ' + result.urgency + '<span class="out-of"> / 5</span></span></div>' +
+      '<div class="result-body">' +
+      '<blockquote>' + esc(card.details.snippet) + '</blockquote>' +
+      '<p class="scores">' + scoreLine + '</p>' +
+      '<p class="mono" style="margin-bottom:8px">Why this urgency</p>' +
+      '<ul class="reasons">' + result.reasons.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul>' +
+      '<label for="draft-' + card.id + '">Drafted reply — edit before sending</label>' +
+      '<textarea class="draft" id="draft-' + card.id + '">' + esc(result.draft) + '</textarea>' +
+      '<p class="mono" style="margin-top:12px">Filed to board: <strong>New</strong> &nbsp;·&nbsp; Card #' + card.id + '</p>' +
+      '</div>';
+    resultsEl.insertBefore(div, resultsEl.firstChild);
+    div.querySelector('textarea').addEventListener('input', function (e) { card.draft = e.target.value; });
+    renderBoard();
+    return card;
+  }
+
+  document.getElementById('triage-btn').addEventListener('click', triageCurrent);
+  document.getElementById('triage-all-btn').addEventListener('click', function () {
+    SAMPLES.forEach(function (s) { input.value = s.text; triageCurrent(); });
+    input.value = SAMPLES[0].text;
+  });
+  document.getElementById('clear-btn').addEventListener('click', function () {
+    cards.length = 0;
+    resultsEl.innerHTML = '<p style="margin-top:24px;color:var(--slate)">Board cleared. Paste a message above, or load a sample.</p>';
+    renderBoard();
+  });
+
+  renderBoard();
+  /* Expose board state for verification in the browser console. */
+  window.__triage.cards = cards;
+  window.__triage.moveCard = moveCard;
+  window.__triage.triageCurrent = triageCurrent;
+})();
+</script>
+</body>
+</html>

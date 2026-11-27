@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Receptionist Demo — Sample Plumbing Co. | Ussari Labs</title>
+<meta name="description" content="Working text demo of a missed-call AI receptionist for a sample plumbing and HVAC business. Built by Ussari Labs. No live call is placed; the demo runs entirely in your browser at $0.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="../../mark.svg">
+<style>
+/* USSARI LABS — Structural Precision. No gradients, no shadows, no rounded corners. */
+:root{
+  --crimson:#DC2626; --alabaster:#F8F4F4; --slate:#A39E9E; --white:#FFFFFF;
+  --charcoal:#1A1515; --oxide:#4A0E17;
+  --font-head:"Space Grotesk","Plus Jakarta Sans",sans-serif;
+  --font-body:"Inter","Roboto",sans-serif;
+  --font-mono:"JetBrains Mono","Fira Code",monospace;
+  --border:1px solid var(--charcoal);
+}
+*{box-sizing:border-box;border-radius:0 !important}
+body{margin:0;background:var(--white);color:var(--charcoal);font-family:var(--font-body);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--font-head);font-weight:700;text-transform:uppercase;letter-spacing:-.03em;line-height:1.1;margin:0}
+h1{font-size:clamp(1.7rem,4vw,2.6rem)} h2{font-size:1.25rem} h3{font-size:1rem}
+p{margin:0 0 .75rem} a{color:inherit}
+.mono{font-family:var(--font-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase}
+.wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+.site-header{background:var(--white);border-bottom:var(--border);position:sticky;top:0;z-index:10}
+.header-inner{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:64px}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--charcoal)}
+.brand-word{font-family:var(--font-head);font-weight:700;text-transform:uppercase;letter-spacing:-.03em;font-size:1.15rem}
+.main-nav{display:flex;gap:4px;flex-wrap:wrap}
+.main-nav a{font-family:var(--font-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;padding:10px 12px;border:1px solid transparent}
+.main-nav a:hover{border-color:var(--charcoal)}
+.hero{background:var(--charcoal);color:var(--white);padding:56px 0 48px}
+.hero .eyebrow{color:var(--slate);margin:0 0 1rem}
+.hero h1{margin:0 0 1rem}
+.hero .lede{color:var(--alabaster);max-width:720px;margin:0}
+/* Honesty banner — the most prominent block after the hero */
+.honest{background:var(--alabaster);border-bottom:var(--border)}
+.honest-inner{border-left:4px solid var(--crimson);padding:20px 24px;margin:24px 0}
+.honest-inner h2{margin-bottom:.5rem}
+.honest-inner p{margin:0 0 .5rem}
+.honest-inner p:last-child{margin:0}
+.honest-inner strong{color:var(--crimson)}
+.section{padding:48px 0}
+.grid{display:grid;grid-template-columns:1.15fr .85fr;gap:24px;align-items:start}
+.panel{border:var(--border);background:var(--white)}
+.panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;padding:16px 20px;border-bottom:var(--border);background:var(--alabaster)}
+.panel-head h2{font-size:1.1rem}
+.panel-body{padding:20px}
+.tag{display:inline-block;font-family:var(--font-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--charcoal);padding:3px 8px;background:var(--white)}
+.tag-crimson{background:var(--crimson);border-color:var(--crimson);color:var(--white)}
+.tag-dark{background:var(--charcoal);color:var(--white);border-color:var(--charcoal)}
+/* Call header / phone */
+.callbar{border:var(--border);background:var(--charcoal);color:var(--white);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.callbar .who{font-family:var(--font-head);font-weight:700;text-transform:uppercase}
+.callbar .num{font-family:var(--font-mono);font-size:.78rem;color:var(--slate)}
+.callbar.ringing .who::after{content:" — RINGING";color:var(--crimson)}
+.callbar.live .who::after{content:" — CALL LIVE";color:#fff}
+.status-dot{display:inline-block;width:10px;height:10px;background:var(--slate);margin-right:8px;vertical-align:middle}
+.callbar.ringing .status-dot{background:var(--crimson)}
+.callbar.live .status-dot{background:#22c55e}
+/* Chat */
+.chat{border:var(--border);border-top:none;min-height:380px;max-height:460px;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:10px;background:var(--white)}
+.msg{max-width:85%;padding:10px 14px;border:var(--border);font-size:.95rem;line-height:1.5}
+.msg.agent{background:var(--alabaster);align-self:flex-start}
+.msg.user{background:var(--charcoal);color:var(--white);align-self:flex-end;border-color:var(--charcoal)}
+.msg.system{background:var(--white);border-style:dashed;align-self:center;text-align:center;font-family:var(--font-mono);font-size:.75rem;letter-spacing:.04em;text-transform:uppercase;color:var(--charcoal);max-width:100%}
+.msg .who{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:4px;color:var(--crimson)}
+.msg.user .who{color:var(--slate)}
+.msg.typing{color:var(--slate);font-family:var(--font-mono);font-size:.8rem}
+.chips{display:flex;flex-wrap:wrap;gap:8px;padding:0 0 4px}
+.chip{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;background:var(--white);border:var(--border);padding:9px 12px;cursor:pointer}
+.chip:hover,.chip:focus-visible{background:var(--charcoal);color:var(--white)}
+.chip:disabled{opacity:.45;cursor:default}
+.chip.crimson{border-color:var(--crimson);color:var(--crimson)}
+.chip.crimson:hover{background:var(--crimson);color:var(--white)}
+.composer{display:flex;gap:0;border:var(--border);border-top:none}
+.composer input{flex:1;border:none;padding:14px 16px;font-family:var(--font-body);font-size:1rem;min-width:0}
+.composer input:focus{outline:2px solid var(--crimson);outline-offset:-2px}
+.composer button{border:none;border-left:var(--border)}
+.btn{display:inline-block;font-family:var(--font-head);font-weight:700;text-transform:uppercase;letter-spacing:-.03em;font-size:.95rem;text-decoration:none;padding:13px 22px;border:1px solid var(--crimson);cursor:pointer;background:var(--crimson);color:var(--white)}
+.btn:hover,.btn:focus-visible{background:var(--oxide);border-color:var(--oxide)}
+.btn-ghost{background:var(--white);color:var(--charcoal);border-color:var(--charcoal)}
+.btn-ghost:hover{background:var(--charcoal);color:var(--white);border-color:var(--charcoal)}
+.btn-small{padding:9px 14px;font-size:.85rem}
+.btn:disabled{opacity:.45;cursor:default}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.hint{font-size:.85rem;color:#555;margin-top:10px}
+.hint button{background:none;border:none;padding:0;font:inherit;color:var(--crimson);text-decoration:underline;cursor:pointer}
+/* Schedule */
+.slot{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 14px;border:var(--border);border-top:none;font-size:.92rem}
+.slot:first-of-type{border-top:var(--border)}
+.slot .time{font-family:var(--font-mono);font-weight:500}
+.slot.free .state{color:#166534}
+.slot.booked{background:var(--alabaster)}
+.slot.booked .state{color:var(--crimson);font-weight:600}
+.slot.booked-user{border-left:4px solid var(--crimson)}
+.slot .detail{font-size:.85rem;color:#444;text-align:right}
+.slot .detail b{color:var(--charcoal)}
+/* Log */
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid #ddd;vertical-align:top}
+th{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase}
+tbody tr:last-child td{border-bottom:none}
+.empty{color:#666;font-size:.9rem;margin:0}
+/* SMS */
+.sms{background:var(--charcoal);color:var(--white);padding:16px}
+.sms .phone-head{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--slate);border-bottom:1px solid var(--slate);padding-bottom:8px;margin-bottom:12px}
+.sms-bubble{background:var(--white);color:var(--charcoal);padding:12px 14px;font-size:.92rem;line-height:1.55;max-width:92%}
+.sms-meta{font-family:var(--font-mono);font-size:.7rem;color:var(--slate);margin-top:10px;letter-spacing:.04em}
+/* Booking summary */
+.summary{border:2px solid var(--crimson);padding:16px 18px;margin-top:16px;background:var(--alabaster)}
+.summary h3{margin-bottom:.5rem}
+.summary dl{display:grid;grid-template-columns:130px 1fr;gap:4px 12px;margin:0 0 .5rem;font-size:.92rem}
+.summary dt{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;padding-top:3px}
+.summary dd{margin:0}
+/* How it works */
+.howto{border:var(--border);margin-top:24px}
+.howto ol{margin:0;padding:20px 20px 20px 44px}
+.howto li{margin-bottom:.5rem}
+.howto li:last-child{margin:0}
+.does{margin-top:24px}
+.does ul{margin:0;padding-left:20px}
+.does li{margin-bottom:.4rem}
+.site-footer{background:var(--charcoal);color:var(--white);padding:32px 0;margin-top:48px}
+.footer-inner{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:center}
+.footer-inner p{margin:0;color:var(--slate)}
+.footer-inner a{color:var(--white)}
+@media (max-width:900px){
+  .grid{grid-template-columns:1fr}
+  .header-inner{flex-direction:column;align-items:flex-start;gap:8px;padding:14px 0}
+  .section{padding:32px 0}
+  .chat{min-height:320px}
+  .summary dl{grid-template-columns:1fr}
+  .summary dt{padding-top:6px}
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="../../index.html" aria-label="Ussari Labs — home">
+      <svg class="mark" width="36" height="36" viewBox="0 0 96 96" role="img" aria-label="Ussari Labs mark"><rect x="0" y="0" width="30" height="96" fill="currentColor"/><rect x="30" y="66" width="36" height="30" fill="currentColor"/><rect x="66" y="0" width="30" height="96" fill="currentColor"/></svg>
+      <span class="brand-word">USSARI&nbsp;LABS</span>
+    </a>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="../../index.html#services">Services</a>
+      <a href="../../index.html#work">Work</a>
+      <a href="../../index.html#contact">Start a project</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <p class="mono eyebrow">USSARI LABS&nbsp;&nbsp;/&nbsp;&nbsp;AI AUTOMATION AGENCY&nbsp;&nbsp;/&nbsp;&nbsp;DEMO 01</p>
+      <h1>AI Receptionist Demo</h1>
+      <p class="lede">A missed-call receptionist for a home-services business. The business missed a call — the receptionist answers, takes the job details, and books it into the day&rsquo;s schedule. Try it: run a simulated call below.</p>
+    </div>
+  </section>
+
+  <section class="honest" aria-label="What this demo is and is not">
+    <div class="wrap">
+      <div class="honest-inner">
+        <h2>Read this first — what this demo is</h2>
+        <p><strong>This is a TEXT demo of the receptionist flow.</strong> No live phone call is placed, no number is dialled, and no SMS is actually sent. The business, the caller and the bookings on this page are <strong>samples</strong>.</p>
+        <p><strong>Sample business:</strong> &ldquo;Sample Plumbing Co.&rdquo; — a fictional plumbing &amp; HVAC business created for this demo. It is <strong>not a real client</strong> of Ussari Labs.</p>
+        <p><strong>A live voice deployment</strong> would run on a voice platform such as Vapi, Retell or Bland, with the client paying usage at <strong>~$0.13&ndash;$0.14 per minute all-in</strong>. This demo itself runs entirely in your browser at <strong>$0</strong> — nothing you type leaves this page, and nothing is stored.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="grid">
+
+        <!-- LEFT: THE CALL -->
+        <div>
+          <div class="callbar" id="callbar">
+            <div><span class="status-dot" aria-hidden="true"></span><span class="who" id="callbar-who">Sample Plumbing Co. — receptionist idle</span><br><span class="num" id="callbar-num">No call in progress. The phone number shown during a call, 07700 900000, is a fictional sample number (Ofcom drama range) — not a real person.</span></div>
+            <span class="tag" id="call-state">IDLE</span>
+          </div>
+
+          <div class="chat" id="chat" aria-live="polite" aria-label="Simulated call transcript">
+            <div class="msg system">Demo ready. Press &ldquo;Simulate incoming call&rdquo; to start. The receptionist will ask for the service, urgency, address, preferred time, name and phone — then confirm the booking.</div>
+          </div>
+
+          <div style="padding:12px 0 0" id="chips" class="chips" aria-label="Quick replies"></div>
+
+          <form class="composer" id="composer">
+            <label for="user-input" class="mono" style="position:absolute;left:-9999px">Your reply as the caller</label>
+            <input id="user-input" type="text" autocomplete="off" placeholder="Type your reply as the caller…" disabled>
+            <button class="btn" type="submit" id="send-btn" disabled>Send</button>
+          </form>
+
+          <div class="controls">
+            <button class="btn" type="button" id="start-btn">Simulate incoming call</button>
+            <button class="btn btn-ghost" type="button" id="end-btn" disabled>End call</button>
+            <button class="btn btn-ghost" type="button" id="reset-btn">Reset demo</button>
+          </div>
+          <p class="hint">Stuck? Use <button type="button" id="sample-answer">Fill in a sample answer</button> for the current question, or type it in your own words — the receptionist reads free text, not just the buttons. Type &ldquo;human&rdquo; at any point to be transferred to the office instead of booking.</p>
+
+          <div class="summary" id="booking-summary" hidden>
+            <h3>Booking confirmed</h3>
+            <dl id="summary-list"></dl>
+            <p style="margin:0">The slot is now filled on today&rsquo;s schedule (right), the call is in the log, and the SMS preview below is the message the customer would receive. Press &ldquo;Simulate incoming call&rdquo; to book another job — try the same time again and watch it refuse the double-booking.</p>
+          </div>
+        </div>
+
+        <!-- RIGHT: SCHEDULE / LOG / SMS -->
+        <div>
+          <section class="panel" aria-label="Today's schedule">
+            <div class="panel-head"><h2>Today&rsquo;s schedule</h2><span class="tag" id="today-date"></span></div>
+            <div class="panel-body" style="padding:0">
+              <div id="schedule" role="list" aria-label="Bookable time slots today"></div>
+              <p style="padding:12px 16px 16px;margin:0;font-size:.85rem;color:#555">Two slots are pre-booked as <strong>samples</strong> so you can see a filled day. Every booking you make fills a real slot in this page — reload the page and the day resets to the two samples.</p>
+            </div>
+          </section>
+
+          <section class="panel" style="margin-top:24px" aria-label="Call log">
+            <div class="panel-head"><h2>Call log</h2><span class="tag">THIS DEMO SESSION</span></div>
+            <div class="panel-body">
+              <p class="empty" id="log-empty">No calls yet in this demo session. Completed and ended calls appear here.</p>
+              <table id="log-table" hidden>
+                <thead><tr><th>Time</th><th>Caller</th><th>Service</th><th>Urgency</th><th>Outcome</th></tr></thead>
+                <tbody id="log-body"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel" style="margin-top:24px" aria-label="SMS confirmation preview">
+            <div class="panel-head"><h2>SMS confirmation</h2><span class="tag">PREVIEW — NOT SENT</span></div>
+            <div class="panel-body">
+              <div class="sms">
+                <div class="phone-head">Messages &nbsp;·&nbsp; Sample Plumbing Co.</div>
+                <div class="sms-bubble" id="sms-body">No booking yet. When a call ends in a booking, the exact confirmation message the customer would receive appears here — as a preview only. No SMS is sent from this demo.</div>
+                <div class="sms-meta" id="sms-meta">To: — &nbsp;·&nbsp; Status: not sent (demo)</div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+      </div>
+
+      <div class="howto panel">
+        <div class="panel-head"><h2>How a live version would work</h2><span class="tag">AUDIT FIRST, THEN BUILD</span></div>
+        <ol>
+          <li><strong>Audit:</strong> Ussari maps the business&rsquo;s real missed calls, services, service area and booking rules before building anything.</li>
+          <li><strong>Build:</strong> the receptionist is deployed on a voice platform such as Vapi, Retell or Bland, connected to the business&rsquo;s real calendar and phone number.</li>
+          <li><strong>Run:</strong> it answers missed calls in voice, books into the real schedule, logs every call and sends a real SMS confirmation. The client pays usage at ~$0.13&ndash;$0.14 per minute all-in.</li>
+        </ol>
+      </div>
+
+      <div class="does panel">
+        <div class="panel-head"><h2>What this demo does — and does not do</h2></div>
+        <div class="panel-body">
+          <ul>
+            <li><strong>Does:</strong> run the full booking conversation in text; understand free-text answers; ask again when an answer is missing or unclear; fill real slots; refuse a double-booking and offer the nearest free alternative; log the call; preview the SMS.</li>
+            <li><strong>Does not:</strong> place or receive a real phone call; send a real SMS; connect to any calendar, phone system or voice platform; use any real business, caller or booking. No data leaves your browser.</li>
+          </ul>
+          <p style="margin:1rem 0 0"><a href="../../index.html#contact">Ask Ussari Labs about a receptionist for your business &rarr;</a></p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p class="mono">© 2026 USSARI LABS — STRUCTURAL PRECISION</p>
+    <p class="mono">DEMO 01 — AI RECEPTIONIST · SAMPLE BUSINESS · $0 · NO LIVE CALL</p>
+    <p><a href="../../index.html">Back to Ussari Labs &uarr;</a></p>
+  </div>
+</footer>
+
+<script>
+"use strict";
+/* ============================================================
+   AI RECEPTIONIST DEMO — all state lives in this page only.
+   No network calls, no storage, no phone/SMS service.
+   ============================================================ */
+
+/* ---------- Day schedule: hourly slots 08:00–17:00 ---------- */
+var SLOT_HOURS = [8,9,10,11,12,13,14,15,16,17];
+var SAMPLE_SEED = [
+  {hour:9,  service:"Boiler service", name:"J. Sample", urgency:"This week", sample:true},
+  {hour:13, service:"Blocked drain",  name:"K. Sample", urgency:"Today",     sample:true}
+];
+var bookings = {};   /* hour -> {service,name,urgency,phone,address,ref,sample} */
+var logRows = [];
+var bookingCount = 0;
+
+function seedBookings(){
+  bookings = {};
+  SAMPLE_SEED.forEach(function(s){ bookings[s.hour] = {service:s.service, name:s.name, urgency:s.urgency, phone:"—", address:"Sample address", ref:"SAMPLE", sample:true}; });
+}
+function fmtHour(h){ return (h<10?"0":"")+h+":00"; }
+function todayLabel(){
+  var d = new Date();
+  return d.toLocaleDateString("en-GB",{weekday:"long", day:"numeric", month:"long", year:"numeric"});
+}
+function nowTime(){
+  var d = new Date();
+  return ("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2);
+}
+function freeHours(){ return SLOT_HOURS.filter(function(h){ return !bookings[h]; }); }
+function nearestFree(hour){
+  var free = freeHours();
+  if(!free.length) return [];
+  free.sort(function(a,b){ return Math.abs(a-hour)-Math.abs(b-hour) || a-b; });
+  return free.slice(0,2);
+}
+
+/* ---------- Conversation state ---------- */
+var callActive = false;
+var fields = null;          /* {service,urgency,address,hour,name,phone} */
+var step = null;            /* service|urgency|address|time|name|phone|confirm|slotchoice */
+var pendingHour = null;     /* hour requested but taken */
+var offeredHours = [];      /* alternatives offered after a conflict */
+var unclearCount = 0;
+var typingTimer = null;
+
+var chatEl = document.getElementById("chat");
+var chipsEl = document.getElementById("chips");
+var inputEl = document.getElementById("user-input");
+var sendBtn = document.getElementById("send-btn");
+var startBtn = document.getElementById("start-btn");
+var endBtn = document.getElementById("end-btn");
+var callbar = document.getElementById("callbar");
+var callState = document.getElementById("call-state");
+var callbarWho = document.getElementById("callbar-who");
+var callbarNum = document.getElementById("callbar-num");
+
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+function addMsg(who, text, kind){
+  var div = document.createElement("div");
+  div.className = "msg " + (kind || (who === "agent" ? "agent" : "user"));
+  if(kind === "system"){ div.textContent = text; }
+  else{
+    var w = document.createElement("span"); w.className = "who";
+    w.textContent = who === "agent" ? "Sample Plumbing Co. — Receptionist" : "Caller (you)";
+    div.appendChild(w);
+    var t = document.createElement("span"); t.innerHTML = esc(text).replace(/\n/g,"<br>");
+    div.appendChild(t);
+  }
+  chatEl.appendChild(div);
+  chatEl.scrollTop = chatEl.scrollHeight;
+  return div;
+}
+function agentSay(text, chips){ agentSayDelayed(text, chips, 650); }
+function agentSayDelayed(text, chips, delay){
+  setComposer(false);
+  var typing = document.createElement("div");
+  typing.className = "msg agent typing"; typing.textContent = "Receptionist is typing…";
+  chatEl.appendChild(typing); chatEl.scrollTop = chatEl.scrollHeight;
+  clearTimeout(typingTimer);
+  typingTimer = setTimeout(function(){
+    typing.remove();
+    addMsg("agent", text);
+    setChips(chips || []);
+    setComposer(callActive);
+    if(callActive) inputEl.focus();
+  }, delay);
+}
+function setChips(list){
+  chipsEl.innerHTML = "";
+  (list || []).forEach(function(c){
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "chip" + (c.crimson ? " crimson" : "");
+    b.textContent = c.label;
+    b.addEventListener("click", function(){ submitUser(c.value !== undefined ? c.value : c.label); });
+    chipsEl.appendChild(b);
+  });
+}
+function setComposer(enabled){
+  inputEl.disabled = !enabled; sendBtn.disabled = !enabled;
+}
+function setCallUI(state){
+  callbar.classList.remove("ringing","live");
+  if(state === "ringing"){ callbar.classList.add("ringing"); callState.textContent = "RINGING"; callState.className = "tag tag-crimson"; }
+  else if(state === "live"){ callbar.classList.add("live"); callState.textContent = "CALL LIVE"; callState.className = "tag tag-crimson"; }
+  else { callState.textContent = "IDLE"; callState.className = "tag"; }
+}
+
+/* ---------- Rendering: schedule, log, SMS ---------- */
+function renderSchedule(){
+  var el = document.getElementById("schedule");
+  el.innerHTML = "";
+  SLOT_HOURS.forEach(function(h){
+    var b = bookings[h];
+    var row = document.createElement("div");
+    row.className = "slot " + (b ? "booked" + (b.sample ? "" : " booked-user") : "free");
+    row.setAttribute("role","listitem");
+    var left = document.createElement("span");
+    left.innerHTML = '<span class="time">'+fmtHour(h)+'</span> &nbsp;·&nbsp; <span class="state">'+(b ? "BOOKED" : "FREE")+'</span>';
+    var right = document.createElement("span");
+    right.className = "detail";
+    if(b){ right.innerHTML = "<b>"+esc(b.service)+"</b> — "+esc(b.name)+(b.sample ? " <span class='mono'>(sample)</span>" : " · "+esc(b.urgency)); }
+    else { right.textContent = "Available"; }
+    row.appendChild(left); row.appendChild(right);
+    el.appendChild(row);
+  });
+  document.getElementById("today-date").textContent = todayLabel();
+}
+function renderLog(){
+  var table = document.getElementById("log-table");
+  var empty = document.getElementById("log-empty");
+  var body = document.getElementById("log-body");
+  body.innerHTML = "";
+  if(!logRows.length){ table.hidden = true; empty.hidden = false; return; }
+  table.hidden = false; empty.hidden = true;
+  logRows.forEach(function(r){
+    var tr = document.createElement("tr");
+    [r.time, r.caller, r.service, r.urgency, r.outcome].forEach(function(v){
+      var td = document.createElement("td"); td.textContent = v; tr.appendChild(td);
+    });
+    body.appendChild(tr);
+  });
+}
+function addLog(caller, service, urgency, outcome){
+  logRows.unshift({time:nowTime(), caller:caller||"—", service:service||"—", urgency:urgency||"—", outcome:outcome});
+  renderLog();
+}
+function renderSMS(b){
+  document.getElementById("sms-body").textContent =
+    "Sample Plumbing Co.: Hi " + b.name + ", your " + b.service.toLowerCase() +
+    " visit is booked for today at " + fmtHour(b.hour) + ". Our engineer will call on arrival. " +
+    "Address: " + b.address + ". Ref " + b.ref + ". Reply CANCEL to cancel.";
+  document.getElementById("sms-meta").textContent =
+    "To: " + b.phone + "  ·  Preview only — not sent (demo)  ·  " + nowTime();
+}
+
+/* ---------- Free-text parsing ---------- */
+var SERVICE_RULES = [
+  {re:/burst|leak|leaking|flood|water (everywhere|coming|pouring)|pipe (burst|broken|leak)/i, label:"Burst pipe / leak"},
+  {re:/boiler|heating|heater|hot water|no heat|radiator/i, label:"Boiler / heating"},
+  {re:/drain|block|clog|sewer|slow drain/i, label:"Blocked drain"},
+  {re:/tap|faucet|toilet|shower|bath|kitchen sink|sink/i, label:"Tap / toilet / bathroom"},
+  {re:/air con|aircon|a\/c|air conditioning|hvac|ventilation/i, label:"Air conditioning / HVAC"},
+  {re:/gas/i, label:"Gas appliance"}
+];
+var VAGUE = /^(idk|i don'?t know|not sure|dunno|help|something|thing|broken|it'?s broken|problem|issue|fix it|emergency\??)$/i;
+function parseService(text){
+  for(var i=0;i<SERVICE_RULES.length;i++){ if(SERVICE_RULES[i].re.test(text)) return SERVICE_RULES[i].label; }
+  return null;
+}
+function parseUrgency(text){
+  if(/emergency|urgent|asap|right now|immediately|flooding|burst/i.test(text)) return "Emergency";
+  if(/\btoday\b|tonight|this afternoon|this morning/i.test(text)) return "Today";
+  if(/tomorrow/i.test(text)) return "Today"; /* nearest bookable day in this demo is today; agent clarifies */
+  if(/this week|week|few days|whenever|not urgent|no rush/i.test(text)) return "This week";
+  return null;
+}
+function parseTime(text){
+  var m = text.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
+  if(!m) return null;
+  var h = parseInt(m[1],10);
+  if(m[3]){ if(/pm/i.test(m[3]) && h<12) h+=12; if(/am/i.test(m[3]) && h===12) h=0; }
+  else if(h>=1 && h<=7){ h+=12; } /* "2" in a trades context means 2pm, not 2am */
+  if(h<8 || h>17) return {outOfHours:true, hour:h};
+  return {hour:h};
+}
+function parsePhone(text){
+  var digits = text.replace(/\D/g,"");
+  if(digits.length>=7 && digits.length<=15) return digits;
+  return null;
+}
+function looksLikeAddress(text){
+  var t = text.trim();
+  if(t.length < 8) return false;
+  if(/^(my house|home|my home|my place|here)$/i.test(t)) return false;
+  return /\d/.test(t) || /\b(street|road|lane|avenue|avenue|close|drive|town|village|area|colony|sector|house)\b/i.test(t) || t.split(/\s+/).length >= 3;
+}
+function validName(text){
+  var t = text.trim();
+  if(t.length < 2 || t.length > 40) return false;
+  if(!/^[A-Za-z][A-Za-z'’\- ]+$/.test(t)) return false;
+  if(/^(yes|no|ok|okay|hi|hello|please|thanks|thank you)$/i.test(t)) return false;
+  return true;
+}
+function sampleAnswerFor(stepName){
+  if(stepName==="service") return "There's a leak under the kitchen sink";
+  if(stepName==="urgency") return "Emergency — water is leaking now";
+  if(stepName==="address") return "12 High Street, Sampletown";
+  if(stepName==="time") return fmtHour(freeHours()[0] !== undefined ? freeHours()[0] : 10);
+  if(stepName==="name") return "Alex Sample";
+  if(stepName==="phone") return "07700 900123";
+  return "";
+}
+
+/* ---------- Conversation flow ---------- */
+function askService(){
+  step = "service"; unclearCount = 0;
+  agentSay("Hello, Sample Plumbing Co. — this is the automated receptionist. Sorry we missed your call. What do you need help with today — a leak, boiler or heating, a blocked drain, or something else?",
+    [{label:"Burst pipe / leak"},{label:"Boiler not working"},{label:"Blocked drain"},{label:"Tap / toilet"},{label:"Radiator cold"},{label:"Air conditioning"}]);
+}
+function askUrgency(){
+  step = "urgency";
+  agentSay("Thanks — "+fields.service+". How urgent is it?",
+    [{label:"Emergency — leaking now", value:"Emergency — water is leaking now", crimson:true},{label:"Today"},{label:"This week"}]);
+}
+function askAddress(){
+  step = "address";
+  agentSay("Got it — "+fields.urgency.toLowerCase()+". What is the address for the visit? Please include the street and town, for example “12 High Street, Sampletown”.", []);
+}
+function askTime(){
+  step = "time";
+  var free = freeHours();
+  if(!free.length){
+    agentSay("I’m sorry — every slot today is already booked, so I can’t book a visit today. I’ve logged this call and the office will call you back about the next available day.", []);
+    addLog(fields.name || "Caller", fields.service, fields.urgency, "No slot today — office to call back");
+    endCall(false);
+    return;
+  }
+  var chips = free.slice(0,4).map(function(h){ return {label:fmtHour(h), value:fmtHour(h)}; });
+  var prefix = fields.urgency === "Emergency"
+    ? "This is an emergency, so I’ll put you in the earliest free slot. "
+    : "";
+  agentSay(prefix+"What time works for you today? Free slots: "+free.map(fmtHour).join(", ")+".",
+    chips.concat([{label:"Earliest available", value:"earliest"}]));
+}
+function askName(){
+  step = "name";
+  agentSay("Perfect — "+fmtHour(fields.hour)+" today is free and I’ve held it for you. What name should I book it under?", []);
+}
+function askPhone(){
+  step = "phone";
+  agentSay("Thanks, "+fields.name+". What is the best phone number to confirm the booking on?", []);
+}
+function askConfirm(){
+  step = "confirm";
+  var s = "Let me confirm the booking:\n• Service: "+fields.service+"\n• Urgency: "+fields.urgency+"\n• Address: "+fields.address+"\n• Time: today at "+fmtHour(fields.hour)+"\n• Name: "+fields.name+"\n• Phone: "+fields.phone+"\n\nShall I book that in?";
+  agentSay(s, [{label:"Yes, book it", value:"yes", crimson:true},{label:"Change the time", value:"change time"},{label:"Start again", value:"start again"}]);
+}
+function nextMissing(){
+  if(!fields.service) return askService;
+  if(!fields.urgency) return askUrgency;
+  if(!fields.address) return askAddress;
+  if(fields.hour === null || fields.hour === undefined) return askTime;
+  if(!fields.name) return askName;
+  if(!fields.phone) return askPhone;
+  return askConfirm;
+}
+
+function completeBooking(){
+  bookingCount++;
+  var ref = "SPC-" + String(1000 + bookingCount);
+  var b = {hour:fields.hour, service:fields.service, name:fields.name, urgency:fields.urgency, phone:fields.phone, address:fields.address, ref:ref, sample:false};
+  bookings[fields.hour] = b;
+  renderSchedule(); renderSMS(b);
+  addLog(b.name, b.service, b.urgency, "Booked — today " + fmtHour(b.hour) + " · Ref " + ref);
+  var dl = document.getElementById("summary-list");
+  dl.innerHTML = "";
+  [["Reference",ref],["Service",b.service],["Urgency",b.urgency],["When","Today at "+fmtHour(b.hour)],["Address",b.address],["Name",b.name],["Phone",b.phone]].forEach(function(pair){
+    var dt = document.createElement("dt"); dt.textContent = pair[0];
+    var dd = document.createElement("dd"); dd.textContent = pair[1];
+    dl.appendChild(dt); dl.appendChild(dd);
+  });
+  document.getElementById("booking-summary").hidden = false;
+  agentSay("All booked, "+b.name+". Your "+b.service.toLowerCase()+" visit is confirmed for today at "+fmtHour(b.hour)+" — reference "+ref+". We’ve sent a confirmation text to "+b.phone+" (shown as a preview on this page — no real SMS is sent in the demo). Our engineer will call on arrival. Is there anything else I can help with?", []);
+  setChips([{label:"That’s all, thanks", value:"done"},{label:"Book another job", value:"another"}]);
+  step = "done";
+  callActive = true; /* stay live until caller ends it */
+  endBtn.disabled = false;
+}
+
+function handleSlotConflict(requested){
+  pendingHour = requested;
+  offeredHours = nearestFree(requested);
+  step = "slotchoice";
+  var msg = "I’m sorry — "+fmtHour(requested)+" today is already booked, so I can’t put you in that slot.";
+  if(offeredHours.length){
+    msg += " The nearest free slots are "+offeredHours.map(fmtHour).join(" and ")+". Would one of those work?";
+    var chips = offeredHours.map(function(h){ return {label:fmtHour(h), value:fmtHour(h)}; });
+    chips.push({label:"Pick a different time", value:"different time"});
+    agentSay(msg, chips);
+  } else {
+    msg += " Unfortunately there are no free slots left today — I’ve logged the call and the office will call you back about the next available day.";
+    agentSay(msg, []);
+    addLog(fields.name || "Caller", fields.service, fields.urgency, "Requested slot taken; no slot today");
+    endCall(false);
+  }
+}
+
+function submitUser(raw){
+  if(!callActive && step !== "done") return;
+  var text = String(raw == null ? inputEl.value : raw).trim();
+  if(!text) return;
+  inputEl.value = "";
+  addMsg("user", text);
+  setChips([]);
+  handleUser(text);
+}
+
+function handleUser(text){
+  var low = text.toLowerCase();
+
+  /* Transfers / exits — available at any step */
+  if(/\b(human|person|real person|agent|operator|speak to someone|talk to someone)\b/i.test(text)){
+    addLog(fields && fields.name ? fields.name : "Caller", fields && fields.service ? fields.service : "—", fields && fields.urgency ? fields.urgency : "—", "Transferred to office (caller asked for a person)");
+    agentSay("Of course — I’ll transfer you to the office now. They’ll pick up the details from this call. Thank you for calling Sample Plumbing Co.", []);
+    endCall(false);
+    return;
+  }
+  if(step === "done"){
+    if(/another|book another|one more/i.test(low)){ startCallFlow(true); return; }
+    addLog(fields.name, fields.service, fields.urgency, "Booked — today " + fmtHour(fields.hour));
+    agentSay("Thank you — goodbye. Your booking is on today’s schedule.", []);
+    endCall(false);
+    return;
+  }
+  if(step === "confirm"){
+    if(/^(yes|yeah|yep|confirm|book it|correct|that'?s right|ok|okay|sure)\b/i.test(low) || low === "yes, book it"){ completeBooking(); return; }
+    if(/change time|different time|another time/i.test(low)){ fields.hour = null; askTime(); return; }
+    if(/start again|restart|from scratch/i.test(low)){ startCallFlow(true); return; }
+    if(/^(no|nope|not yet|cancel)\b/i.test(low)){
+      addLog(fields.name || "Caller", fields.service, fields.urgency, "Not booked — caller declined at confirmation");
+      agentSay("No problem — I haven’t booked anything. Call us back any time, or type “start again” if you’d like to change the details.", []);
+      endCall(false);
+      return;
+    }
+    agentSay("Just to be sure — shall I book that in as I read it back, or would you like to change the time?",
+      [{label:"Yes, book it", value:"yes", crimson:true},{label:"Change the time", value:"change time"},{label:"Start again", value:"start again"}]);
+    return;
+  }
+  if(step === "slotchoice"){
+    var t = parseTime(text);
+    if(t && !t.outOfHours && offeredHours.indexOf(t.hour) !== -1){ fields.hour = t.hour; askNameOrNext(); return; }
+    if(t && !t.outOfHours && !bookings[t.hour]){ fields.hour = t.hour; askNameOrNext(); return; }
+    if(t && !t.outOfHours && bookings[t.hour]){ handleSlotConflict(t.hour); return; }
+    if(/different time|another time|pick another/i.test(low)){ askTime(); return; }
+    if(/earliest/i.test(low) && offeredHours.length){ fields.hour = offeredHours[0]; askNameOrNext(); return; }
+    agentSay("Please pick one of the free slots I offered — "+offeredHours.map(fmtHour).join(" or ")+" — or say “different time” to see the full list.",
+      offeredHours.map(function(h){ return {label:fmtHour(h), value:fmtHour(h)}; }));
+    return;
+  }
+
+  /* Opportunistic extraction: a caller may answer two questions at once. */
+  if(!fields.service){
+    var svc = parseService(text);
+    if(svc){ fields.service = svc; }
+    else if(step === "service"){
+      unclearCount++;
+      if(VAGUE.test(text) || text.length < 4){
+        agentSay(unclearCount >= 2
+          ? "No problem — let me narrow it down. Is it a leak or burst pipe, the boiler or heating, a blocked drain, a tap or toilet, or the air conditioning? Tap one, or describe it in a few words."
+          : "I didn’t quite catch the problem — could you describe it in a few words? For example: “leak under the sink”, “boiler not working”, or “blocked drain”.",
+          [{label:"Burst pipe / leak"},{label:"Boiler not working"},{label:"Blocked drain"},{label:"Tap / toilet"},{label:"Air conditioning"}]);
+        return;
+      }
+      /* A longer free-text answer with no recognised keyword: accept it as stated, but check. */
+      fields.service = text.length > 60 ? text.slice(0,60) : text;
+      agentSay("Thanks — I’ve noted that as “"+fields.service+"”. I’ll pass that description to the engineer.", []);
+      /* fall through to urgency on the next turn via nextMissing after a beat */
+      setTimeout(function(){ if(callActive && step === "service") askUrgency(); }, 900);
+      step = "service-pending";
+      return;
+    }
+  }
+  if(!fields.urgency){
+    var urg = parseUrgency(text);
+    if(urg) fields.urgency = urg;
+  }
+  if(step === "urgency" && !fields.urgency){
+    agentSay("Is it an emergency, needed today, or can it wait until this week?",
+      [{label:"Emergency — leaking now", value:"Emergency — water is leaking now", crimson:true},{label:"Today"},{label:"This week"}]);
+    return;
+  }
+  if(step === "address"){
+    if(!looksLikeAddress(text)){
+      agentSay("I need a bit more than that to send an engineer — could you give the street and town? For example: “12 High Street, Sampletown”.",
+        []);
+      return;
+    }
+    fields.address = text;
+  }
+  if(step === "time"){
+    if(/earliest|first available|as soon as possible|asap/i.test(low)){
+      var free = freeHours();
+      if(free.length){ fields.hour = free[0]; }
+    } else if(/morning/i.test(low)){
+      var morn = freeHours().filter(function(h){ return h < 12; });
+      if(morn.length) fields.hour = morn[0];
+    } else if(/afternoon/i.test(low)){
+      var aft = freeHours().filter(function(h){ return h >= 12; });
+      if(aft.length) fields.hour = aft[0];
+    } else {
+      var pt = parseTime(text);
+      if(pt && pt.outOfHours){
+        agentSay("We only book visits between 08:00 and 17:00. The free slots today are: "+freeHours().map(fmtHour).join(", ")+". Which one works?",
+          freeHours().slice(0,4).map(function(h){ return {label:fmtHour(h), value:fmtHour(h)}; }));
+        return;
+      }
+      if(pt) fields.hour = pt.hour;
+    }
+    if(fields.hour === null || fields.hour === undefined){
+      agentSay("What time today works for you? Free slots are: "+freeHours().map(fmtHour).join(", ")+".",
+        freeHours().slice(0,4).map(function(h){ return {label:fmtHour(h), value:fmtHour(h)}; }));
+      return;
+    }
+    if(bookings[fields.hour]){ var taken = fields.hour; fields.hour = null; handleSlotConflict(taken); return; }
+  }
+  if(step === "name"){
+    if(!validName(text)){
+      agentSay("Could you give the name for the booking — first name is fine, for example “Alex Sample”?", []);
+      return;
+    }
+    fields.name = text.replace(/\s+/g," ").trim();
+  }
+  if(step === "phone"){
+    var ph = parsePhone(text);
+    if(!ph){
+      agentSay("That number doesn’t look complete — could you give the full phone number we can confirm the booking on? For example: 07700 900123.", []);
+      return;
+    }
+    fields.phone = ph;
+  }
+  /* Advance to the next missing field (or confirmation). */
+  nextMissing()();
+}
+function askNameOrNext(){
+  if(!fields.name) askName();
+  else if(!fields.phone) askPhone();
+  else askConfirm();
+}
+
+/* ---------- Call lifecycle ---------- */
+function startCallFlow(continuing){
+  fields = {service:null, urgency:null, address:null, hour:null, name:null, phone:null};
+  step = "service"; pendingHour = null; offeredHours = []; unclearCount = 0;
+  document.getElementById("booking-summary").hidden = true;
+  callActive = true;
+  startBtn.disabled = true; endBtn.disabled = false;
+  setCallUI("live");
+  callbarWho.textContent = "Sample Plumbing Co. — incoming call";
+  callbarNum.textContent = "Caller: 07700 900000 (sample number) · Missed call answered by the AI receptionist";
+  if(!continuing) addMsg("system", "Incoming call — Sample Plumbing Co. missed this call, so the AI receptionist answered.");
+  askService();
+}
+function endCall(byUser){
+  if(!callActive) return;
+  callActive = false;
+  setChips([]); setComposer(false);
+  startBtn.disabled = false; endBtn.disabled = true;
+  setCallUI("idle");
+  callbarWho.textContent = "Sample Plumbing Co. — receptionist idle";
+  callbarNum.textContent = "No call in progress. The phone number shown during a call, 07700 900000, is a fictional sample number (Ofcom drama range) — not a real person.";
+  if(byUser){
+    addLog(fields && fields.name ? fields.name : "Caller", fields && fields.service ? fields.service : "—", fields && fields.urgency ? fields.urgency : "—", "Caller hung up before booking");
+    addMsg("system", "Call ended by the caller.");
+  }
+}
+
+startBtn.addEventListener("click", function(){
+  startBtn.disabled = true;
+  setCallUI("ringing");
+  callbarWho.textContent = "Sample Plumbing Co. — incoming call";
+  callbarNum.textContent = "Caller: 07700 900000 (sample number) · Ringing…";
+  addMsg("system", "Incoming call — Sample Plumbing Co. missed this call, so the AI receptionist is answering.");
+  setTimeout(function(){ startCallFlow(false); }, 1100);
+});
+endBtn.addEventListener("click", function(){ endCall(true); });
+document.getElementById("reset-btn").addEventListener("click", function(){
+  clearTimeout(typingTimer);
+  callActive = false; fields = null; step = null;
+  chatEl.innerHTML = "";
+  addMsg("system", "Demo reset. Press “Simulate incoming call” to start. The phone number shown during a call, 07700 900000, is a fictional sample number — not a real person.");
+  document.getElementById("booking-summary").hidden = true;
+  document.getElementById("sms-body").textContent = "No booking yet. When a call ends in a booking, the exact confirmation message the customer would receive appears here — as a preview only. No SMS is sent from this demo.";
+  document.getElementById("sms-meta").textContent = "To: —  ·  Status: not sent (demo)";
+  logRows = []; bookingCount = 0; renderLog();
+  seedBookings(); renderSchedule();
+  setChips([]); setComposer(false);
+  startBtn.disabled = false; endBtn.disabled = true;
+  setCallUI("idle");
+  callbarWho.textContent = "Sample Plumbing Co. — receptionist idle";
+  callbarNum.textContent = "No call in progress. The phone number shown during a call, 07700 900000, is a fictional sample number (Ofcom drama range) — not a real person.";
+});
+document.getElementById("composer").addEventListener("submit", function(e){ e.preventDefault(); submitUser(null); });
+document.getElementById("sample-answer").addEventListener("click", function(){
+  if(!callActive || !step || step === "done" || step === "confirm" || step === "slotchoice"){ return; }
+  var v = sampleAnswerFor(step);
+  if(v){ inputEl.value = v; inputEl.focus(); }
+});
+
+/* ---------- Init ---------- */
+seedBookings(); renderSchedule(); renderLog();
+</script>
+</body>
+</html>

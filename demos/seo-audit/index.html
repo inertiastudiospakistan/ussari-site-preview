@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SEO Audit Demo — Ussari Labs AI Automation Agency</title>
+<meta name="description" content="Live demo of the Ussari Labs SEO automation audit: fetch any public page, check its on-page SEO, compare keyword gaps against a competitor, and generate a content brief. Demo tool — not a rank guarantee.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --crimson:#DC2626; --alabaster:#F8F4F4; --slate:#A39E9E;
+    --white:#FFFFFF; --charcoal:#1A1515; --oxide:#4A0E17;
+    --pass:#15803D; --warn:#B45309; --fail:#DC2626;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--white);color:var(--charcoal);font-family:"Inter",sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:"Space Grotesk",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:-.03em;line-height:1.1;margin:0}
+  h1{font-size:clamp(1.8rem,4vw,2.8rem)}
+  h2{font-size:1.4rem;margin-bottom:1rem}
+  h3{font-size:1.05rem;letter-spacing:0}
+  p{margin:0 0 1rem}
+  a{color:inherit}
+  .mono{font-family:"JetBrains Mono",monospace;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase}
+  .wrap{max-width:960px;margin:0 auto;padding:0 24px}
+  header{background:var(--white);border-bottom:1px solid var(--charcoal)}
+  .header-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:64px}
+  .brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--charcoal)}
+  .brand-word{font-family:"Space Grotesk",sans-serif;font-weight:700;text-transform:uppercase;font-size:1.2rem;letter-spacing:-.03em}
+  .brand small{font-family:"JetBrains Mono",monospace;font-size:.72rem;letter-spacing:.08em;color:var(--slate);text-transform:uppercase}
+  .hero{background:var(--charcoal);color:var(--white);padding:64px 0 48px}
+  .hero .eyebrow{color:var(--slate);margin:0 0 1rem}
+  .hero p.lede{color:var(--alabaster);max-width:680px;font-size:1.1rem}
+  .demo-badge{display:inline-block;border:1px solid var(--crimson);color:#fff;background:var(--crimson);padding:4px 10px;margin-top:1rem}
+  section{padding:48px 0;border-top:1px solid var(--charcoal)}
+  section:first-of-type{border-top:none}
+  label{display:block;font-family:"JetBrains Mono",monospace;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;margin:0 0 .4rem}
+  input[type=url],textarea{width:100%;border:1px solid var(--charcoal);padding:12px 14px;font-family:"JetBrains Mono",monospace;font-size:.9rem;background:var(--white);color:var(--charcoal)}
+  input[type=url]:focus,textarea:focus{outline:2px solid var(--crimson);outline-offset:1px}
+  textarea{min-height:140px;resize:vertical}
+  .field{margin-bottom:20px}
+  .hint{font-size:.85rem;color:#555;margin:.35rem 0 0}
+  .btn{display:inline-block;font-family:"Space Grotesk",sans-serif;font-weight:700;text-transform:uppercase;font-size:1rem;padding:14px 28px;border:1px solid var(--crimson);background:var(--crimson);color:#fff;cursor:pointer}
+  .btn:hover{background:var(--oxide);border-color:var(--oxide)}
+  .btn:disabled{background:var(--slate);border-color:var(--slate);cursor:wait}
+  .btn-ghost{background:transparent;color:var(--charcoal);border-color:var(--charcoal)}
+  .btn-ghost:hover{background:var(--charcoal);color:#fff;border-color:var(--charcoal)}
+  .btn-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .status{font-family:"JetBrains Mono",monospace;font-size:.82rem;background:var(--alabaster);border:1px solid var(--charcoal);padding:14px 16px;margin-top:24px;white-space:pre-wrap;word-break:break-word;display:none}
+  .status.show{display:block}
+  .status .ok{color:var(--pass)} .status .bad{color:var(--fail)} .status .info{color:var(--charcoal)}
+  .error{border:1px solid var(--fail);background:#FDF2F2;padding:16px 18px;margin-top:24px;display:none}
+  .error.show{display:block}
+  .error h3{color:var(--fail);margin-bottom:.5rem}
+  .results{display:none}
+  .results.show{display:block}
+  .score-box{display:flex;gap:24px;flex-wrap:wrap;align-items:stretch;border:1px solid var(--charcoal);margin:0 0 32px}
+  .score-num{background:var(--charcoal);color:#fff;padding:28px 32px;text-align:center;min-width:180px}
+  .score-num strong{display:block;font-family:"Space Grotesk",sans-serif;font-size:3.4rem;line-height:1}
+  .score-num span{font-family:"JetBrains Mono",monospace;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--slate)}
+  .score-summary{padding:24px 28px;flex:1;min-width:260px}
+  .score-summary p:last-child{margin-bottom:0}
+  .grade-pass{color:var(--pass)} .grade-warn{color:var(--warn)} .grade-fail{color:var(--fail)}
+  table{width:100%;border-collapse:collapse;border:1px solid var(--charcoal);margin:0 0 32px}
+  th,td{text-align:left;padding:12px 14px;border:1px solid var(--charcoal);vertical-align:top;font-size:.95rem}
+  th{font-family:"JetBrains Mono",monospace;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;background:var(--alabaster)}
+  .verdict{font-family:"JetBrains Mono",monospace;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;font-weight:500;white-space:nowrap}
+  .verdict.pass{color:var(--pass)} .verdict.warn{color:var(--warn)} .verdict.fail{color:var(--fail)}
+  .pill{display:inline-block;border:1px solid var(--charcoal);padding:2px 8px;font-family:"JetBrains Mono",monospace;font-size:.75rem;margin:0 4px 4px 0}
+  .pill.hot{border-color:var(--crimson);color:var(--crimson)}
+  .gap-list{margin:0;padding:0;list-style:none}
+  .gap-list li{border:1px solid var(--charcoal);padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .gap-list .term{font-family:"JetBrains Mono",monospace;font-weight:500}
+  .gap-list .count{font-family:"JetBrains Mono",monospace;font-size:.8rem;color:#555}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+  .brief-block{border:1px solid var(--charcoal);padding:20px 22px;margin-bottom:24px}
+  .brief-block h3{margin-bottom:.75rem}
+  .brief-block ol,.brief-block ul{margin:0 0 .5rem;padding-left:20px}
+  .brief-block li{margin-bottom:.4rem}
+  .brief-block p:last-child{margin-bottom:0}
+  .note{border-left:4px solid var(--crimson);background:var(--alabaster);padding:16px 18px;margin:0 0 24px}
+  .note p:last-child{margin-bottom:0}
+  .muted{color:#555;font-size:.9rem}
+  footer{background:var(--charcoal);color:#fff;padding:32px 0}
+  footer p{margin:0;color:var(--slate)}
+  footer a{color:#fff}
+  details{border:1px solid var(--charcoal);padding:14px 16px;margin-bottom:24px}
+  details summary{cursor:pointer;font-family:"JetBrains Mono",monospace;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase}
+  details pre{white-space:pre-wrap;word-break:break-word;font-family:"JetBrains Mono",monospace;font-size:.8rem;margin:12px 0 0}
+  @media (max-width:700px){.two-col{grid-template-columns:1fr}.score-num{min-width:100%}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap header-inner">
+    <a class="brand" href="../../">
+      <svg width="32" height="32" viewBox="0 0 96 96" role="img" aria-label="Ussari Labs mark"><rect x="0" y="0" width="30" height="96" fill="currentColor"/><rect x="30" y="66" width="36" height="30" fill="currentColor"/><rect x="66" y="0" width="30" height="96" fill="currentColor"/></svg>
+      <span class="brand-word">USSARI&nbsp;LABS</span>
+      <small>AI Automation Agency</small>
+    </a>
+    <a class="mono" href="../../" style="text-decoration:none">← Back to ussari labs</a>
+  </div>
+</header>
+
+<main>
+  <div class="hero">
+    <div class="wrap">
+      <p class="mono eyebrow">Demo 01&nbsp;&nbsp;/&nbsp;&nbsp;SEO Automation&nbsp;&nbsp;/&nbsp;&nbsp;Week 1</p>
+      <h1>SEO audit, run live.</h1>
+      <p class="lede">Paste a URL. This tool fetches the real page, checks its on-page SEO, compares its copy against a competitor, and drafts a content brief from what it actually finds. No canned results — every number below comes from the page you enter.</p>
+      <span class="demo-badge mono">Live demo — audit tool, not a rank guarantee</span>
+    </div>
+  </div>
+
+  <section>
+    <div class="wrap">
+      <div class="note">
+        <p><strong>What this is.</strong> A working demonstration of the SEO systems Ussari Labs builds for clients: automated audits, competitor gap analysis, and content briefs generated from real page data. It checks on-page signals only. It does not promise rankings, traffic, or positions — nobody honest can promise those from a single page check.</p>
+        <p><strong>How fetching works.</strong> Browsers block direct cross-site fetches, so this demo routes the request through free public CORS proxies (best effort). Some sites block proxies or refuse to load — if a fetch fails, paste the page's HTML below instead and the same audit runs on it. The source used is always labelled in the report.</p>
+      </div>
+
+      <form id="audit-form" novalidate>
+        <div class="field">
+          <label for="url">Page to audit</label>
+          <input type="url" id="url" value="https://inertiastudiospakistan.github.io/ussari-site/" required spellcheck="false">
+          <p class="hint">Any public page. Defaults to the Ussari Labs site itself.</p>
+        </div>
+        <div class="field">
+          <label for="competitor">Competitor URL (optional)</label>
+          <input type="url" id="competitor" placeholder="https://example-competitor.com/page" spellcheck="false">
+          <p class="hint">If given, the demo compares the words on both pages and shows terms the competitor covers that this page does not. This is an on-page copy comparison — not a ranking claim.</p>
+        </div>
+        <div class="btn-row">
+          <button class="btn" type="submit" id="run-btn">Run audit</button>
+          <button class="btn btn-ghost" type="button" id="sample-btn">Try example.com instead</button>
+        </div>
+      </form>
+
+      <div class="status" id="status" aria-live="polite"></div>
+      <div class="error" id="error" role="alert"></div>
+
+      <div id="results" class="results" style="margin-top:32px">
+        <div class="score-box">
+          <div class="score-num"><strong id="score-num">–</strong><span>On-page score / 100</span></div>
+          <div class="score-summary">
+            <h2 id="score-grade">—</h2>
+            <p id="score-summary-text"></p>
+            <p class="mono muted" id="source-line"></p>
+          </div>
+        </div>
+
+        <h2>Check-by-check report</h2>
+        <table>
+          <thead><tr><th>Check</th><th>Result</th><th>Verdict</th></tr></thead>
+          <tbody id="checks-body"></tbody>
+        </table>
+
+        <h2>Page facts</h2>
+        <div class="two-col" style="margin-bottom:32px">
+          <div class="brief-block">
+            <h3>Structure found</h3>
+            <p id="structure-facts" style="margin:0"></p>
+          </div>
+          <div class="brief-block">
+            <h3>Most-used words on the page</h3>
+            <p id="top-words" style="margin:0"></p>
+          </div>
+        </div>
+
+        <div id="gap-section">
+          <h2>Keyword gaps vs competitor</h2>
+          <p class="muted">Terms the competitor uses in its visible copy that this page barely uses or does not use at all. Simple term-frequency comparison of the two pages' own words — an on-page gap analysis, <strong>not</strong> a claim about who ranks for what.</p>
+          <ul class="gap-list" id="gap-list"></ul>
+          <p class="muted" id="gap-note"></p>
+        </div>
+
+        <h2>Content brief — generated from this audit</h2>
+        <div class="brief-block">
+          <h3>Suggested H2 sections</h3>
+          <ol id="brief-h2s"></ol>
+        </div>
+        <div class="brief-block">
+          <h3>Questions the page should answer</h3>
+          <ul id="brief-questions"></ul>
+        </div>
+        <div class="brief-block">
+          <h3>Internal links to use</h3>
+          <p class="muted">Link targets taken from this page's own internal links — point new sections at pages the site already has.</p>
+          <ul id="brief-links"></ul>
+        </div>
+
+        <div class="btn-row" style="margin-bottom:32px">
+          <button class="btn btn-ghost" type="button" id="copy-btn">Copy plain-text report</button>
+        </div>
+      </div>
+
+      <details>
+        <summary>Fetch failed? Paste raw HTML instead</summary>
+        <p class="hint" style="margin-top:12px">Open the page in your browser, View Source, copy the HTML, paste it here. The audit runs on exactly what you paste — labelled as pasted HTML in the report. If you also fill in a competitor URL above, the competitor is still fetched live (or paste its HTML in the second box).</p>
+        <div class="field" style="margin-top:12px">
+          <label for="paste-html">HTML of the page to audit</label>
+          <textarea id="paste-html" placeholder="&lt;!doctype html&gt; &lt;html&gt; …" spellcheck="false"></textarea>
+        </div>
+        <div class="field">
+          <label for="paste-competitor-html">HTML of the competitor page (optional)</label>
+          <textarea id="paste-competitor-html" placeholder="&lt;!doctype html&gt; &lt;html&gt; …" spellcheck="false"></textarea>
+        </div>
+        <div class="btn-row">
+          <button class="btn" type="button" id="paste-btn">Audit pasted HTML</button>
+        </div>
+      </details>
+
+      <p class="muted">Built by Ussari Labs, Pakistan. Demo only — no data is stored, no account needed, nothing is sent anywhere except the page fetch itself (via the public proxy) and the optional competitor fetch. No email or phone is collected on this page.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p class="mono">Ussari Labs — Structural Precision — Brand Vol. 01</p>
+    <p class="mono" style="margin-top:8px"><a href="../../">ussari labs</a> &nbsp;/&nbsp; © 2026</p>
+  </div>
+</footer>
+
+<script>
+"use strict";
+/* ============================================================
+   Ussari Labs — SEO Audit Demo (client-side only)
+   Fetches the target page through free public CORS proxies,
+   parses it with DOMParser, and audits what it actually finds.
+   No results are canned: every check reads the fetched document.
+   ============================================================ */
+
+var DEFAULT_URL = "https://inertiastudiospakistan.github.io/ussari-site/";
+
+var STOPWORDS = new Set(("a about above after again against all am an and any are as at be because been before being below between both but by could did do does doing down during each few for from further had has have having he her here hers herself him himself his how i if in into is it its itself just like me more most my myself no nor not now of off on once only or other our ours ourselves out over own same she should so some such than that the their theirs them themselves then there these they this those through to too under until up very was we were what when where which while who whom why will with you your yours yourself " +
+  "also one two can may use used using get got make made many much per via etc may might must shall would could should").split(" "));
+
+var PROXIES = [
+  { name: "AllOrigins (JSON)", build: function (u) { return "https://api.allorigins.win/get?url=" + encodeURIComponent(u); },
+    extract: function (r) { return r.json().then(function (j) { if (!j || typeof j.contents !== "string" || !j.contents) throw new Error("empty contents"); return j.contents; }); } },
+  { name: "AllOrigins (raw)", build: function (u) { return "https://api.allorigins.win/raw?url=" + encodeURIComponent(u); },
+    extract: function (r) { return r.text(); } },
+  { name: "CodeTabs", build: function (u) { return "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(u); },
+    extract: function (r) { return r.text(); } },
+  { name: "cors.lol", build: function (u) { return "https://api.cors.lol/?url=" + encodeURIComponent(u); },
+    extract: function (r) { return r.text(); } },
+  { name: "corsproxy.org", build: function (u) { return "https://corsproxy.org/?url=" + encodeURIComponent(u); },
+    extract: function (r) { return r.text(); } }
+];
+
+var $ = function (id) { return document.getElementById(id); };
+var statusEl = $("status"), errorEl = $("error"), resultsEl = $("results");
+
+function logLine(msg, cls) {
+  statusEl.classList.add("show");
+  var line = document.createElement("div");
+  line.textContent = msg;
+  if (cls) line.className = cls;
+  statusEl.appendChild(line);
+}
+function clearLog() { statusEl.classList.remove("show"); statusEl.textContent = ""; }
+function showError(html) { errorEl.innerHTML = html; errorEl.classList.add("show"); }
+function hideError() { errorEl.classList.remove("show"); errorEl.innerHTML = ""; }
+
+function normaliseUrl(raw) {
+  var u = (raw || "").trim();
+  if (!u) return "";
+  if (!/^https?:\/\//i.test(u)) u = "https://" + u;
+  return u;
+}
+
+function fetchWithTimeout(url, ms) {
+  var ctrl = new AbortController();
+  var t = setTimeout(function () { ctrl.abort(); }, ms || 20000);
+  return fetch(url, { signal: ctrl.signal }).finally(function () { clearTimeout(t); });
+}
+
+/* Try a direct fetch first (works when the site sends CORS headers or is
+   same-origin), then each public proxy in turn. Returns {html, via}. */
+function fetchPage(url) {
+  logLine("Fetching " + url + " …", "info");
+  return fetchWithTimeout(url, 12000).then(function (r) {
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.text();
+  }).then(function (html) {
+    if (!html || html.length < 50) throw new Error("empty response");
+    logLine("✓ Fetched directly (site allows cross-origin reads).", "ok");
+    return { html: html, via: "direct fetch (site sends CORS headers)" };
+  }).catch(function (directErr) {
+    logLine("Direct fetch blocked (" + directErr.message + ") — trying public CORS proxies…", "info");
+    var chain = Promise.reject(new Error("start"));
+    PROXIES.forEach(function (p) {
+      chain = chain.catch(function () {
+        logLine("… trying " + p.name, "info");
+        return fetchWithTimeout(p.build(url), 20000).then(function (r) {
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          return p.extract(r);
+        }).then(function (html) {
+          if (!html || html.length < 50) throw new Error("empty response");
+          logLine("✓ Fetched via " + p.name + ".", "ok");
+          return { html: html, via: "public proxy — " + p.name };
+        });
+      });
+    });
+    return chain.catch(function () {
+      throw new Error("All fetch routes failed for " + url + ". The site may block proxies, require JavaScript, or be unreachable. Paste its HTML below instead — the same audit runs on pasted HTML.");
+    });
+  });
+}
+
+function parsePage(html, baseUrl) {
+  var doc = new DOMParser().parseFromString(html, "text/html");
+  if (doc.querySelector("parsererror")) throw new Error("Could not parse the HTML.");
+  return doc;
+}
+
+function cleanText(el) {
+  var clone = el.cloneNode(true);
+  clone.querySelectorAll("br").forEach(function (br) { br.replaceWith(document.createTextNode(" ")); });
+  return (clone.textContent || "").replace(/\s+/g, " ").trim();
+}
+
+function visibleText(doc) {
+  var body = doc.body;
+  if (!body) return "";
+  var clone = body.cloneNode(true);
+  ["script", "style", "noscript", "svg", "iframe"].forEach(function (sel) {
+    clone.querySelectorAll(sel).forEach(function (n) { n.remove(); });
+  });
+  clone.querySelectorAll("br").forEach(function (br) { br.replaceWith(document.createTextNode(" ")); });
+  return (clone.innerText || clone.textContent || "").replace(/\s+/g, " ").trim();
+}
+
+function wordFreq(text) {
+  var freq = new Map();
+  (text.toLowerCase().match(/[a-z][a-z0-9'\-]{2,}/g) || []).forEach(function (w) {
+    if (STOPWORDS.has(w)) return;
+    freq.set(w, (freq.get(w) || 0) + 1);
+  });
+  return freq;
+}
+
+function topTerms(freq, n) {
+  return Array.from(freq.entries()).sort(function (a, b) { return b[1] - a[1]; }).slice(0, n || 25);
+}
+
+function resolveLinks(doc, baseUrl) {
+  var internal = [], external = [];
+  var base;
+  try { base = new URL(baseUrl); } catch (e) { base = null; }
+  doc.querySelectorAll("a[href]").forEach(function (a) {
+    var href = (a.getAttribute("href") || "").trim();
+    if (!href || /^javascript:/i.test(href) || /^mailto:/i.test(href) || /^tel:/i.test(href)) return;
+    var abs;
+    try { abs = new URL(href, baseUrl).href; } catch (e) { return; }
+    var host = "";
+    try { host = new URL(abs).hostname; } catch (e) {}
+    var item = { href: abs, text: cleanText(a).slice(0, 80) || abs };
+    // Fragment-only links (#about) are same-page internal links, not dead ends.
+    if (href.charAt(0) === "#" || (base && host === base.hostname)) internal.push(item); else external.push(item);
+  });
+  return { internal: internal, external: external };
+}
+
+function analyse(doc, url) {
+  var titleEl = doc.querySelector("title");
+  var title = titleEl ? (titleEl.textContent || "").trim() : "";
+  var metaDescEl = doc.querySelector('meta[name="description"]');
+  var metaDesc = metaDescEl ? ((metaDescEl.getAttribute("content") || "").trim()) : "";
+  var h1s = Array.from(doc.querySelectorAll("h1")).map(function (h) { return cleanText(h); }).filter(Boolean);
+  var h2s = Array.from(doc.querySelectorAll("h2")).map(function (h) { return cleanText(h); }).filter(Boolean);
+  var h3s = Array.from(doc.querySelectorAll("h3")).map(function (h) { return cleanText(h); }).filter(Boolean);
+  var imgs = Array.from(doc.querySelectorAll("img"));
+  var imgsNoAlt = imgs.filter(function (im) { return !(im.getAttribute("alt") || "").trim(); });
+  var canonicalEl = doc.querySelector('link[rel="canonical"]');
+  var canonical = canonicalEl ? (canonicalEl.getAttribute("href") || "").trim() : "";
+  var robotsEl = doc.querySelector('meta[name="robots"]');
+  var robots = robotsEl ? ((robotsEl.getAttribute("content") || "").trim()) : "";
+  var viewport = !!doc.querySelector('meta[name="viewport"]');
+  var lang = (doc.documentElement.getAttribute("lang") || "").trim();
+  var text = visibleText(doc);
+  var words = text ? text.split(/\s+/).length : 0;
+  var freq = wordFreq(text);
+  var links = resolveLinks(doc, url);
+
+  var checks = [];
+  function add(name, verdict, detail, points, max) {
+    checks.push({ name: name, verdict: verdict, detail: detail, points: points, max: max });
+  }
+
+  if (!title) add("Page title", "fail", "No <title> found. Search results would show the URL instead of a title.", 0, 15);
+  else if (title.length < 30) add("Page title", "warn", "Title found (" + title.length + " chars) but short — under 30 characters: “" + title + "”. Aim for 30–60.", 8, 15);
+  else if (title.length > 60) add("Page title", "warn", "Title found (" + title.length + " chars) but long — over 60 characters, so search results will cut it off: “" + title + "”.", 8, 15);
+  else add("Page title", "pass", "Title is " + title.length + " characters: “" + title + "”.", 15, 15);
+
+  if (!metaDesc) add("Meta description", "fail", "No meta description. Search results will invent a snippet from page text.", 0, 15);
+  else if (metaDesc.length < 120) add("Meta description", "warn", "Description found but short (" + metaDesc.length + " chars). Aim for 120–160 characters.", 8, 15);
+  else if (metaDesc.length > 160) add("Meta description", "warn", "Description found but long (" + metaDesc.length + " chars) — search results will cut it off.", 8, 15);
+  else add("Meta description", "pass", "Description is " + metaDesc.length + " characters.", 15, 15);
+
+  if (h1s.length === 0) add("H1 heading", "fail", "No H1 on the page. Every page needs one main heading.", 0, 10);
+  else if (h1s.length === 1) add("H1 heading", "pass", "Exactly one H1: “" + h1s[0] + "”.", 10, 10);
+  else add("H1 heading", "warn", h1s.length + " H1s found — keep one main heading per page. First: “" + h1s[0] + "”.", 5, 10);
+
+  if (h2s.length === 0) add("H2 structure", "fail", "No H2 headings. The page has no section structure for readers or search engines to follow.", 0, 10);
+  else if (h2s.length === 1) add("H2 structure", "warn", "Only 1 H2 (" + h2s[0] + "). Add sections to break the content up.", 5, 10);
+  else add("H2 structure", "pass", h2s.length + " H2 sections found.", 10, 10);
+
+  if (imgs.length === 0) add("Image alt text", "pass", "No <img> elements on the page, so nothing to miss.", 10, 10);
+  else if (imgsNoAlt.length === 0) add("Image alt text", "pass", "All " + imgs.length + " image(s) have alt text.", 10, 10);
+  else add("Image alt text", "warn", imgsNoAlt.length + " of " + imgs.length + " image(s) missing alt text — describe each image for accessibility and image search.", 4, 10);
+
+  if (words >= 300) add("Word count", "pass", words.toLocaleString("en-GB") + " words of visible text — enough to cover a topic properly.", 15, 15);
+  else if (words >= 100) add("Word count", "warn", "Only " + words + " words of visible text. Thin pages struggle to cover a topic — aim for 300+.", 7, 15);
+  else add("Word count", "fail", "Only " + words + " words of visible text. This is a thin page — add real content.", 0, 15);
+
+  if (canonical) add("Canonical URL", "pass", "Canonical set to " + canonical + ".", 10, 10);
+  else add("Canonical URL", "warn", "No canonical link. Add one so search engines know the preferred URL for this page.", 5, 10);
+
+  if (links.internal.length >= 3) add("Internal links", "pass", links.internal.length + " internal link(s) and " + links.external.length + " external link(s).", 10, 10);
+  else if (links.internal.length >= 1) add("Internal links", "warn", "Only " + links.internal.length + " internal link(s). Link to more of the site's own pages.", 5, 10);
+  else add("Internal links", "fail", "No internal links found — the page is an island. Link it into the rest of the site.", 0, 10);
+
+  var robotBits = [];
+  if (robots) robotBits.push("robots meta: “" + robots + "”");
+  if (!viewport) robotBits.push("no viewport meta (mobile display may suffer)");
+  if (!lang) robotBits.push("no lang attribute on <html>");
+  if (/noindex/i.test(robots)) add("Robots / crawl hints", "fail", "Robots meta says noindex — search engines are told NOT to show this page. " + robotBits.join("; ") + ".", 0, 5);
+  else if (robotBits.length) add("Robots / crawl hints", "warn", "No noindex — good. But: " + robotBits.join("; ") + ".", 3, 5);
+  else add("Robots / crawl hints", "pass", "No noindex, viewport meta present, lang=\"" + lang + "\" set.", 5, 5);
+
+  var score = checks.reduce(function (s, c) { return s + c.points; }, 0);
+  return { title: title, metaDesc: metaDesc, h1s: h1s, h2s: h2s, h3s: h3s,
+    imgs: imgs.length, imgsNoAlt: imgsNoAlt.length, canonical: canonical,
+    robots: robots, viewport: viewport, lang: lang, words: words, freq: freq,
+    links: links, checks: checks, score: score };
+}
+
+function gradeFor(score) {
+  if (score >= 80) return { label: "Strong on-page foundation", cls: "grade-pass" };
+  if (score >= 55) return { label: "Decent — fix the warnings first", cls: "grade-warn" };
+  return { label: "Needs work — start with the failures", cls: "grade-fail" };
+}
+
+function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+function renderReport(url, result, via, comp) {
+  var grade = gradeFor(result.score);
+  $("score-num").textContent = result.score;
+  var gradeEl = $("score-grade");
+  gradeEl.textContent = grade.label;
+  gradeEl.className = grade.cls;
+  var fails = result.checks.filter(function (c) { return c.verdict === "fail"; }).length;
+  var warns = result.checks.filter(function (c) { return c.verdict === "warn"; }).length;
+  $("score-summary-text").textContent =
+    "Audited " + url + " — " + result.checks.filter(function (c) { return c.verdict === "pass"; }).length +
+    " of " + result.checks.length + " checks pass, " + warns + " warning(s), " + fails + " failure(s). " +
+    "Score is a simple on-page checklist total, not a ranking prediction.";
+  $("source-line").textContent = "Source: " + via + " · Fetched " + new Date().toLocaleString("en-GB");
+
+  $("checks-body").innerHTML = result.checks.map(function (c) {
+    return "<tr><td>" + esc(c.name) + "</td><td>" + esc(c.detail) + "</td>" +
+      "<td><span class=\"verdict " + c.verdict + "\">" + c.verdict + " · " + c.points + "/" + c.max + "</span></td></tr>";
+  }).join("");
+
+  $("structure-facts").innerHTML =
+    "Title: " + (result.title ? esc("“" + result.title + "”") : "<em>missing</em>") + "<br>" +
+    "H1: " + result.h1s.length + " &nbsp;·&nbsp; H2: " + result.h2s.length + " &nbsp;·&nbsp; H3: " + result.h3s.length + "<br>" +
+    "Words: " + result.words.toLocaleString("en-GB") + " &nbsp;·&nbsp; Images: " + result.imgs + " (" + result.imgsNoAlt + " without alt)<br>" +
+    "Internal links: " + result.links.internal.length + " &nbsp;·&nbsp; External links: " + result.links.external.length + "<br>" +
+    "Canonical: " + (result.canonical ? esc(result.canonical) : "<em>none</em>");
+  if (result.h2s.length) {
+    $("structure-facts").innerHTML += "<br>Existing H2s: " + result.h2s.slice(0, 8).map(function (h) { return esc("“" + h + "”"); }).join(", ");
+  }
+
+  var top = topTerms(result.freq, 15);
+  $("top-words").innerHTML = top.length
+    ? top.map(function (t) { return "<span class=\"pill\">" + esc(t[0]) + " ×" + t[1] + "</span>"; }).join("")
+    : "<em>No indexable words found.</em>";
+
+  /* --- Competitor gaps --- */
+  var gapSection = $("gap-section");
+  var gapList = $("gap-list"), gapNote = $("gap-note");
+  if (!comp) {
+    gapList.innerHTML = "<li><span>No competitor URL given — run the audit with one to see keyword gaps here.</span></li>";
+    gapNote.textContent = "";
+  } else if (comp.error) {
+    gapList.innerHTML = "<li><span>Competitor fetch failed: " + esc(comp.error) + "</span></li>";
+    gapNote.textContent = "The main audit above still ran. Paste the competitor's HTML in the fallback box to compare.";
+  } else {
+    var gaps = topTerms(comp.result.freq, 40).filter(function (t) {
+      return t[1] >= 2 && !(result.freq.get(t[0]) >= 2);
+    }).slice(0, 12);
+    if (!gaps.length) {
+      gapList.innerHTML = "<li><span>No clear gaps found — the audited page already covers the competitor's most-used terms (at least twice each).</span></li>";
+      gapNote.textContent = "Compared against " + comp.url + " (" + comp.result.words.toLocaleString("en-GB") + " words).";
+    } else {
+      gapList.innerHTML = gaps.map(function (t) {
+        var ours = result.freq.get(t[0]) || 0;
+        return "<li><span class=\"term\">" + esc(t[0]) + "</span><span class=\"count\">competitor ×" + t[1] + " &nbsp;·&nbsp; this page ×" + ours + "</span></li>";
+      }).join("");
+      gapNote.textContent = "Compared against " + comp.url + " (" + comp.result.words.toLocaleString("en-GB") + " words). " +
+        "These are terms the competitor repeats in its copy that this page barely mentions — candidate topics to cover, not keywords to stuff.";
+    }
+  }
+
+  /* --- Content brief --- */
+  var topic = (result.title || url).replace(/\s*[|–—-].*$/, "").trim() || "this page";
+  var gapTerms = [];
+  if (comp && !comp.error) {
+    gapTerms = topTerms(comp.result.freq, 40).filter(function (t) { return t[1] >= 2 && !(result.freq.get(t[0]) >= 2); }).slice(0, 6).map(function (t) { return t[0]; });
+  }
+  var h2s = [];
+  if (result.h2s.length === 0) h2s.push("What " + topic + " covers — and what it does not (yet)");
+  gapTerms.forEach(function (term) {
+    h2s.push("How " + term + " fits into " + topic);
+  });
+  if (result.h1s.length > 1) h2s.push("One clear structure: a single H1, then one H2 per section");
+  if (result.words < 300) h2s.push("The detail this page is missing — a full walkthrough in plain language");
+  if (!result.metaDesc) h2s.push("A summary worth clicking: what the page delivers in one paragraph");
+  if (h2s.length === 0) h2s.push("Go deeper on the strongest section — add examples and numbers");
+  h2s = h2s.slice(0, 6);
+  $("brief-h2s").innerHTML = h2s.map(function (h) { return "<li>" + esc(h) + "</li>"; }).join("");
+
+  var questions = gapTerms.map(function (term) { return "What does “" + term + "” mean for someone reading about " + topic + "?"; });
+  if (result.words < 300) questions.push("What would a first-time visitor still not understand after reading this page?");
+  if (!result.canonical) questions.push("Which URL should search engines treat as the canonical version of this page?");
+  if (questions.length === 0) questions.push("What is the one question this page must answer better than any competitor?");
+  $("brief-questions").innerHTML = questions.slice(0, 6).map(function (q) { return "<li>" + esc(q) + "</li>"; }).join("");
+
+  var internal = result.links.internal.slice(0, 8);
+  $("brief-links").innerHTML = internal.length
+    ? internal.map(function (l) { return "<li><a href=\"" + esc(l.href) + "\">" + esc(l.text) + "</a><br><span class=\"mono muted\">" + esc(l.href) + "</span></li>"; }).join("")
+    : "<li>No internal links found on this page — add links to the site's other pages first, then build the brief around them.</li>";
+
+  resultsEl.classList.add("show");
+  resultsEl.scrollIntoView({ behavior: "smooth", block: "start" });
+  window.__lastReport = { url: url, result: result, via: via, comp: comp };
+}
+
+function runAudit(opts) {
+  hideError();
+  resultsEl.classList.remove("show");
+  clearLog();
+  var btn = $("run-btn"), pasteBtn = $("paste-btn");
+  btn.disabled = true; pasteBtn.disabled = true;
+  btn.textContent = "Auditing…";
+
+  var url = opts.url, compUrl = opts.compUrl;
+  var mainPromise = opts.pastedHtml
+    ? Promise.resolve({ html: opts.pastedHtml, via: "pasted HTML (fetch unavailable or skipped)" })
+    : fetchPage(url);
+  var compPromise = null;
+  if (opts.pastedCompHtml) compPromise = Promise.resolve({ html: opts.pastedCompHtml, via: "pasted HTML" });
+  else if (compUrl) compPromise = fetchPage(compUrl).catch(function (e) { return { error: e.message }; });
+
+  mainPromise.then(function (main) {
+    var doc;
+    try { doc = parsePage(main.html, url); }
+    catch (e) { throw new Error("The fetched content could not be parsed as HTML. " + e.message); }
+    var result = analyse(doc, url);
+    logLine("✓ Audit complete: " + result.score + "/100, " + result.words.toLocaleString("en-GB") + " words, " +
+      result.h1s.length + " H1, " + result.h2s.length + " H2, " + result.links.internal.length + " internal links.", "ok");
+    if (!compPromise) return renderReport(url, result, main.via, null);
+    return compPromise.then(function (compRaw) {
+      if (compRaw.error) return renderReport(url, result, main.via, { url: compUrl, error: compRaw.error });
+      var compDoc;
+      try { compDoc = parsePage(compRaw.html, compUrl); }
+      catch (e) { return renderReport(url, result, main.via, { url: compUrl, error: "competitor HTML could not be parsed." }); }
+      var compResult = analyse(compDoc, compUrl);
+      logLine("✓ Competitor analysed: " + compResult.score + "/100, " + compResult.words.toLocaleString("en-GB") + " words.", "ok");
+      renderReport(url, result, main.via, { url: compUrl, result: compResult });
+    });
+  }).catch(function (e) {
+    showError("<h3>Fetch failed</h3><p>" + esc(e.message) + "</p>" +
+      "<p>Nothing was audited — no canned result was substituted. Open the page, copy its HTML (View Source), and use “Audit pasted HTML” below.</p>");
+    logLine("✗ " + e.message, "bad");
+  }).finally(function () {
+    btn.disabled = false; pasteBtn.disabled = false;
+    btn.textContent = "Run audit";
+  });
+}
+
+$("audit-form").addEventListener("submit", function (ev) {
+  ev.preventDefault();
+  var url = normaliseUrl($("url").value);
+  var compUrl = normaliseUrl($("competitor").value);
+  if (!url) { showError("<h3>Missing URL</h3><p>Enter a page URL to audit.</p>"); return; }
+  $("url").value = url;
+  if (compUrl) $("competitor").value = compUrl;
+  runAudit({ url: url, compUrl: compUrl || "" });
+});
+
+$("sample-btn").addEventListener("click", function () {
+  $("url").value = "https://example.com";
+  $("competitor").value = "";
+  runAudit({ url: "https://example.com", compUrl: "" });
+});
+
+$("paste-btn").addEventListener("click", function () {
+  var html = $("paste-html").value.trim();
+  var compHtml = $("paste-competitor-html").value.trim();
+  var url = normaliseUrl($("url").value) || DEFAULT_URL;
+  var compUrl = normaliseUrl($("competitor").value);
+  if (!html) { showError("<h3>Nothing pasted</h3><p>Paste the page's HTML into the box first.</p>"); return; }
+  runAudit({ url: url, compUrl: compUrl || "", pastedHtml: html, pastedCompHtml: compHtml || null });
+});
+
+$("copy-btn").addEventListener("click", function () {
+  var r = window.__lastReport;
+  if (!r) return;
+  var lines = ["USSARI LABS — SEO AUDIT (DEMO)", "Page: " + r.url, "Source: " + r.via, "Score: " + r.result.score + "/100", ""];
+  r.result.checks.forEach(function (c) { lines.push(c.verdict.toUpperCase() + " — " + c.name + ": " + c.detail); });
+  lines.push("", "Demo audit tool — not a rank guarantee.");
+  var text = lines.join("\n");
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function () { $("copy-btn").textContent = "Copied ✓"; setTimeout(function () { $("copy-btn").textContent = "Copy plain-text report"; }, 2000); });
+  } else {
+    var ta = document.createElement("textarea");
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); $("copy-btn").textContent = "Copied ✓"; } catch (e) {}
+    document.body.removeChild(ta);
+    setTimeout(function () { $("copy-btn").textContent = "Copy plain-text report"; }, 2000);
+  }
+});
+</script>
+</body>
+</html>
