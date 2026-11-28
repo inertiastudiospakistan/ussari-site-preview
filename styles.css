@@ -686,6 +686,10 @@ a:focus-visible, .btn:focus-visible, summary:focus-visible, button:focus-visible
   transition: background 0.2s, color 0.2s;
 }
 .call-fab:hover, .call-fab:focus-visible { background: var(--crimson); border-color: var(--crimson); color: var(--white); outline: 2px solid var(--crimson); outline-offset: 2px; }
+/* Hidden while the hero is on screen (mobile only, via JS): the hero's own
+   "Call our AI agent" button does the same job there, and the fixed button
+   would cover the hero CTA row at phone widths. */
+.call-fab--hidden { visibility: hidden; pointer-events: none; }
 
 /* ---------- How we work ---------- */
 
@@ -1117,4 +1121,235 @@ a:focus-visible, .btn:focus-visible, summary:focus-visible, button:focus-visible
   .hero .eyebrow, .hero .lede, .hero-actions, .hero-note { opacity: 1; }
   .hero::after { display: none; }
   .reveal { opacity: 1; transform: none; }
+}
+
+/* ---------- FINAL COPY — new components ---------- */
+
+.hero-loc { color: var(--slate); margin: 1rem 0 0; }
+
+/* Trust strip — numbered, no metrics */
+.trust-list {
+  list-style: none;
+  margin: 2rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+}
+.trust-list li { padding: 24px 20px; border-left: 1px solid var(--line); }
+.trust-list li:first-child { border-left: none; }
+.trust-no { color: var(--crimson); display: block; margin-bottom: 0.5rem; }
+.trust-list span:last-child { font-family: var(--font-head); font-weight: 700; text-transform: uppercase; letter-spacing: -0.03em; font-size: 1.05rem; line-height: 1.3; }
+
+/* Problem / positioning — plain text block */
+.problem-copy { max-width: 760px; margin: 1.5rem 0 2rem; }
+.problem-copy p { font-size: 1.08rem; margin-bottom: 1rem; }
+
+.brand-line {
+  font-family: var(--font-head);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  font-size: 1.5rem;
+  line-height: 1.3;
+  border-left: 4px solid var(--crimson);
+  padding-left: 20px;
+  margin: 2.5rem 0 0;
+  max-width: 760px;
+}
+
+/* Services — full-width entries, copy first */
+.service-list { margin-top: 2rem; border: 1px solid var(--line-strong); background: var(--white); }
+.service-list .service { border: none; border-top: 1px solid var(--line); }
+.service-list .service:first-child { border-top: none; }
+.service-list .service:hover { border-color: var(--line); transform: none; background: var(--white); }
+.service h3 { font-size: 1.5rem; margin-bottom: 0.75rem; }
+.service p { margin-bottom: 0.75rem; max-width: 760px; }
+.service ul { margin: 1rem 0 1.25rem 20px; }
+.service ul li { margin-bottom: 0.35rem; }
+
+.text-cta {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--crimson);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.text-cta:hover, .text-cta:focus-visible { color: var(--charcoal); }
+
+/* Portfolio — the visual centerpiece */
+.project-list { margin-top: 2rem; display: flex; flex-direction: column; gap: 48px; }
+.project {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 40px;
+  align-items: start;
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  padding: 32px;
+}
+.project:nth-child(even) .project-shot { order: 2; }
+.project-shot { border: 1px solid var(--charcoal); background: var(--charcoal); }
+.project-shot img { display: block; width: 100%; height: auto; }
+.project-shot-phone { max-width: 300px; margin: 0 auto; }
+.project-shot-phone img { aspect-ratio: 9 / 20; object-fit: cover; object-position: top; }
+.project-shot-panel { border: 1px solid var(--charcoal); }
+.harness-panel {
+  background: var(--charcoal);
+  color: var(--white);
+  padding: 40px 32px;
+  height: 100%;
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+.harness-panel-kicker {
+  font-family: var(--font-head);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  font-size: 1.6rem;
+  color: var(--white);
+  margin: 0;
+}
+.harness-panel-line { font-size: 1.05rem; color: var(--alabaster); margin: 0; }
+.harness-panel-row { color: var(--slate); margin: 0; }
+.project-no { color: var(--crimson); margin: 0 0 0.5rem; }
+.project-tags { color: var(--slate); margin: 0 0 0.75rem; }
+.project-body h3 { font-size: 1.7rem; margin-bottom: 0.75rem; }
+.project-body p { margin-bottom: 0.75rem; }
+.project-tech { color: var(--slate); margin: 1.25rem 0 1rem; }
+
+.portfolio-cta {
+  margin-top: 48px;
+  border: 1px solid var(--charcoal);
+  background: var(--charcoal);
+  color: var(--white);
+  padding: 36px 32px;
+}
+.portfolio-cta h3 { color: var(--white); font-size: 1.5rem; margin-bottom: 0.5rem; }
+.portfolio-cta p { color: var(--alabaster); }
+.portfolio-cta .btn { margin-top: 0.5rem; }
+
+/* Why Ussari — five points */
+.why-list { margin-top: 2rem; border: 1px solid var(--line-strong); background: var(--white); }
+.why-item { padding: 28px 32px; border-top: 1px solid var(--line); }
+.why-item:first-child { border-top: none; }
+.why-item h3 { font-size: 1.3rem; margin-bottom: 0.5rem; }
+.why-item p { margin-bottom: 0.5rem; max-width: 760px; }
+
+/* AI engagement — numbered steps, dark section */
+.ai-engagement {
+  list-style: none;
+  margin: 2rem 0 0;
+  padding: 0;
+  border: 1px solid var(--line-dark-strong);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+}
+.ai-engagement li {
+  padding: 20px 18px;
+  border-left: 1px solid var(--line-dark);
+  font-size: 0.98rem;
+  color: var(--alabaster);
+}
+.ai-engagement li:first-child { border-left: none; }
+.ai-engagement .mono { color: var(--crimson); display: block; margin-bottom: 0.5rem; }
+
+/* Demos — light section, real screenshots */
+.demo-card-shot { color: var(--charcoal); background: var(--white); }
+.demo-card-shot h3 { color: var(--charcoal); }
+.demo-card-shot p { color: var(--charcoal); }
+.demo-card-shot:hover, .demo-card-shot:focus-visible { background: var(--white); }
+.demo-shot { display: block; border: 1px solid var(--charcoal); margin-bottom: 1rem; overflow: hidden; }
+.demo-shot img { display: block; width: 100%; height: auto; }
+.demo-card-shot .text-cta { display: inline-block; margin-top: 0.75rem; }
+.demo-note { margin-top: 1.25rem; color: var(--slate); }
+
+/* Ways to work — engagement cards */
+.engage-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  margin-top: 2rem;
+}
+.engage-card { padding: 32px 28px; border: 1px solid var(--line); transition: border-color 0.2s, transform 0.25s ease; }
+.engage-card:hover { border-color: var(--crimson); transform: translateY(-2px); }
+.engage-card h3 { font-size: 1.25rem; margin-bottom: 0.5rem; }
+.engage-best { color: var(--crimson); margin: 0 0 0.75rem; }
+.engage-card p { margin-bottom: 0.75rem; }
+
+/* Founders — photo + monograms */
+.founder { padding: 36px 32px; transition: border-color 0.2s, transform 0.25s ease; }
+.founder + .founder { border-left: 1px solid var(--line); }
+.founder:hover { border-color: var(--crimson); transform: translateY(-2px); }
+.founder-photo {
+  display: block;
+  width: 96px;
+  height: 96px;
+  margin-bottom: 1.25rem;
+  border: 1px solid var(--charcoal);
+  overflow: hidden;
+  background: var(--charcoal);
+}
+.founder-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.founder-mono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 1.9rem;
+  color: var(--white);
+  background: var(--charcoal);
+  border: 1px solid var(--crimson);
+}
+.founder h3 { font-size: 1.6rem; margin-bottom: 0.5rem; }
+
+/* Contact form footnote */
+.form-footnote { color: var(--slate); font-size: 0.9rem; margin: 1rem 0 0; }
+
+/* Footer — final copy */
+.footer-tag { color: var(--alabaster); margin: 0 0 0.5rem; font-size: 0.9rem; }
+.footer-about { color: var(--alabaster); margin: 0 0 0.5rem; max-width: 420px; }
+.footer-loc { color: var(--slate); margin: 0 0 1.5rem; }
+.footer-builds { margin-top: 1rem; }
+.site-footer .btn { margin-top: 1rem; }
+.site-footer .footer-meta { margin-top: 0.5rem; }
+
+/* ---------- Final-copy responsive ---------- */
+
+@media (max-width: 1100px) {
+  .trust-list { grid-template-columns: repeat(3, 1fr); }
+  .trust-list li:nth-child(4) { border-left: none; }
+  .trust-list li:nth-child(n+4) { border-top: 1px solid var(--line); }
+  .ai-engagement { grid-template-columns: repeat(3, 1fr); }
+  .ai-engagement li:nth-child(4) { border-left: none; }
+  .ai-engagement li:nth-child(n+4) { border-top: 1px solid var(--line-dark); }
+}
+
+@media (max-width: 900px) {
+  .project { grid-template-columns: 1fr; gap: 24px; padding: 24px; }
+  .project:nth-child(even) .project-shot { order: 0; }
+  .project-shot-phone { max-width: 260px; }
+  .engage-grid { grid-template-columns: 1fr; }
+  .founder + .founder { border-left: none; border-top: 1px solid var(--line); }
+}
+
+@media (max-width: 560px) {
+  .trust-list { grid-template-columns: 1fr; }
+  .trust-list li { border-left: none; border-top: 1px solid var(--line); }
+  .trust-list li:first-child { border-top: none; }
+  .ai-engagement { grid-template-columns: 1fr; }
+  .ai-engagement li { border-left: none; border-top: 1px solid var(--line-dark); }
+  .ai-engagement li:first-child { border-top: none; }
+  .project { padding: 20px; }
+  .harness-panel { min-height: 0; padding: 32px 24px; }
+  .footer-inner { flex-direction: column; }
 }
